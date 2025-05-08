@@ -6,20 +6,31 @@ import sys
 # clase propiedades de ventana
 class Window(QMainWindow):
     def __init__(self):
-        QMainWindow.__init__(self)
+        super().__init__()
+
+        # configuración básica de la ventana
         self.setWindowTitle("Modelos de transporte")
-        self.resize(400,300)
-        
-        layout = QGridLayout()
-        self.setLayout(layout)
+        self.resize(1024,576)
+
+        # widget para ventan principal
+        centralWidget = QWidget()
+        self.setCentralWidget(centralWidget)
+
+        # layout para organizar elementos
+        layout = QVBoxLayout()
+        centralWidget.setLayout(layout)
 
         label = QLabel("Ventana de principal")
-        label.setText("prueba")
-        #label.setAlignment()
-        layout.addWidget(label, 0, 0)
+
+        # crear y configurar Qlabel
+        layout.addWidget(label)
+
+        # botones
+        button = QPushButton("gai")
+        layout.addWidget(button)
 
 # funcion para crear ventana
-def createWindow(tittle, width, height):
+def createWindow(Qwidget, tittle, width, height):
     window = Window()
     window.setWindowTitle(tittle)
     window.setNormal()
@@ -32,8 +43,9 @@ def createWindow(tittle, width, height):
     window.showMinimized()
     window.showMaximized()
 
+if __name__ == "__main__":
 
-# app = QApplication(sys.argv)
-# screen = Window()
-# screen.show()
-# sys.exit(app.exec_())
+    app = QApplication(sys.argv)
+    main_window = Window()
+    main_window.show()
+    sys.exit(app.exec_())
