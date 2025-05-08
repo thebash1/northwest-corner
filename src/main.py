@@ -9,7 +9,7 @@ class Window(QMainWindow):
         super().__init__()
 
         # configuración básica de la ventana
-        self.setWindowTitle("Modelos de transporte")
+        self.setWindowTitle("main.py")
         self.resize(1024,576)
 
         # widget para ventan principal
@@ -20,13 +20,13 @@ class Window(QMainWindow):
         layout = QVBoxLayout()
         centralWidget.setLayout(layout)
 
-        label = QLabel("Ventana de principal")
+        label = QLabel("Modelos de transporte")
 
         # crear y configurar Qlabel
         layout.addWidget(label)
 
         # botones
-        button = QPushButton("gai")
+        button = QPushButton("iniciar")
         layout.addWidget(button)
 
 # funcion para crear ventana
