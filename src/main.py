@@ -3,7 +3,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtGui import QFont, QIcon
 
 # clase propiedades de ventana
 class Window(QMainWindow):
@@ -11,10 +11,8 @@ class Window(QMainWindow):
         super().__init__()
         # self.initUI()
 
-        self.setWindowIcon(QtGui.QIcon('open-box.png'))
-
         # configuración básica de la ventana
-        self.setWindowTitle("main.py")
+        self.setWindowTitle("PyQt5 window")
         self.resize(1024,576)
 
         # widget para ventan principal
@@ -25,25 +23,12 @@ class Window(QMainWindow):
         layout = QVBoxLayout()
         centralWidget.setLayout(layout)
 
-        labelTittle = QLabel("Modelos de transporte")
-        labelBus = QLabel("Cantidad de buses")
-        labelNoun = QLabel("Cantidad de ciudades")
-
-        # crear y configurar Qlabel
-        layout.addWidget(labelTittle)
-        layout.addWidget(labelBus)
-        layout.addWidget(labelNoun)
 
         # botones
-        button = QPushButton("iniciar")
+        button = QPushButton("btn1")
+        button.size()
         layout.addWidget(button)
-
-        # fuente
-        db = QFontDatabase()
-        style = db.styles("JetBrains")
-
-        font = db.font("JetBrains", "Regular", 12)
-        self.setFont(font)
+        
 # region
     # def initUI(self):
     #     self.setGeometry(300, 300, 300, 220)
@@ -69,8 +54,11 @@ class Window(QMainWindow):
 
 # endregion
 
-if __name__ == "__main__":
+if __name__ == "__main__": # ejecutar archivo
+    font = QFont("Cascadia Code", 11) # fuente
+
     app = QApplication(sys.argv)
+    app.setFont(font)
     main_window = Window()
     main_window.show()
     sys.exit(app.exec_())
