@@ -2,8 +2,8 @@
 
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QFont, QFontDatabase
-from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
+from PyQt5.QtGui import QFontDatabase
 
 # clase propiedades de ventana
 class Window(QMainWindow):
@@ -11,10 +11,7 @@ class Window(QMainWindow):
         super().__init__()
         # self.initUI()
 
-    # def initUI(self):
-    #     self.setGeometry(300, 300, 300, 220)
-    #     self.setWindowTitle('Icon')
-    #     self.setWindowIcon(QIcon('open-box.png')) 
+        self.setWindowIcon(QtGui.QIcon('open-box.png'))
 
         # configuración básica de la ventana
         self.setWindowTitle("main.py")
@@ -41,22 +38,36 @@ class Window(QMainWindow):
         button = QPushButton("iniciar")
         layout.addWidget(button)
 
-class FontDialog(QFontDialog):
-    def __init__(self):
-        QFontDialog.__init__(self)
-        self.fontSelected.connect(self.onFontSelect())
+        # fuente
+        db = QFontDatabase()
+        style = db.styles("JetBrains")
 
-    def onFontSelect(self):
-        font = self.currentFont()
+        font = db.font("JetBrains", "Regular", 12)
+        self.setFont(font)
+# region
+    # def initUI(self):
+    #     self.setGeometry(300, 300, 300, 220)
+    #     self.setWindowTitle('Icon')
+    #     self.setWindowIcon(QIcon('open-box.png')) 
 
-        print("Name: %s" % (font.family()))
-        print("Size: %i" % (font.pointSize()))
-        print("Italic: %s" % (font.italic()))
-        print("Underline: %s" % (font.underline()))
-        print("Strikeout: %s" % (font.strikeOut()))
+# class FontDialog(QFontDialog):
+#     def __init__(self):
+#         QFontDialog.__init__(self)
+#         self.fontSelected.connect(self.onFontSelect())
+
+#     def onFontSelect(self):
+#         font = self.currentFont("JetBrains")
+
+#         print("Name: %s" % (font.family("Mono")))
+#         print("Size: %i" % (font.pointSize(12)))
+#         print("Italic: %s" % (font.italic(False)))
+#         print("Underline: %s" % (font.underline(False)))
+#         print("Strikeout: %s" % (font.strikeOut(False)))
     
-    def run(self):
-        self.show()
+#     def run(self):
+#         self.show()
+
+# endregion
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
