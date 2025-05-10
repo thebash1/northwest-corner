@@ -1,24 +1,49 @@
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget,
+    QVBoxLayout, QHBoxLayout,
+    QLabel, QSpinBox, QPushButton,
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem
+)
+from PyQt5.QtCore import Qt, QPointF, QParallelAnimationGroup, QPropertyAnimation, QEasingCurve
+from PyQt5.QtGui import QPixmap, QPen
+
+class IconItem(QGraphicsPixmapItem):
+    def __init__(self, image_path: str, width: int, height: int):
+        super().__init__()
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            raise FileNotFoundError(f"No se encontró el ícono: {image_path}")
+        # Escalamos manteniendo proporción
+        scaled = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.setPixmap(scaled)
+
+class BusItem(IconItem):
+    def __init__(self):
+        # Ruta relativa desde el ejecutable o desde tu script
+        super().__init__("icons/bus.png", width=50, height=30)
+
+class CityItem(IconItem):
+    def __init__(self):
+        super().__init__("icons/city.png", width=80, height=80)
 
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
         super().__init__()
-        self.scene = QGraphicsScene()
+        self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.setRenderHint(QPainter.Antialiasing)
+        self.setRenderHint(self.RenderHints(QApplication.instance().style().AA_UseHighDpiPixmaps))
         self.sources = []
         self.destinations = []
-        self.animations = QParallelAnimationGroup()
+        self.animations = QParallelAnimationGroup(self)
 
-    def create_diagram(self, num_sources, num_destinations):
+    def create_diagram(self, num_sources: int, num_destinations: int):
         self.scene.clear()
-        self.animations = QParallelAnimationGroup()
-        
-        # Crear fuentes (buses)
-        bus_size = 50
+        self.sources.clear()
+        self.destinations.clear()
+        self.animations = QParallelAnimationGroup(self)
+
+        # Crear fuentes (ofertas)
         for i in range(num_sources):
             x = 50
             y = 50 + i * 150
@@ -27,8 +52,7 @@ class TransportationDiagram(QGraphicsView):
             self.scene.addItem(bus)
             self.sources.append(bus)
 
-        # Crear destinos (ciudades)
-        city_size = 80
+        # Crear destinos (demandas)
         for i in range(num_destinations):
             x = 600
             y = 50 + i * 150
@@ -37,92 +61,74 @@ class TransportationDiagram(QGraphicsView):
             self.scene.addItem(city)
             self.destinations.append(city)
 
-        # Conectar con líneas
-        self.draw_connections()
-
-    def draw_connections(self):
-        for source in self.sources:
-            for dest in self.destinations:
+        # Dibujar conexiones
+        for src in self.sources:
+            for dst in self.destinations:
                 line = QGraphicsLineItem(
-                    source.x() + 50, source.y() + 25,
-                    dest.x(), dest.y() + 40)
-                line.setPen(QPen(Qt.gray, 2, Qt.DashLine))
+                    src.x() + src.pixmap().width(), src.y() + src.pixmap().height() / 2,
+                    dst.x(),                 dst.y() + dst.pixmap().height() / 2
+                )
+                line.setPen(QPen(Qt.darkGreen, 2, Qt.DashLine))
                 self.scene.addItem(line)
 
     def animate_transport(self):
-        for source in self.sources:
-            for dest in self.destinations:
-                animation = QPropertyAnimation(source, b"pos")
-                animation.setDuration(2000)
-                animation.setStartValue(source.pos())
-                animation.setEndValue(QPointF(dest.x() - 50, dest.y()))
-                animation.setEasingCurve(QEasingCurve.InOutQuad)
-                self.animations.addAnimation(animation)
-        
+        # Mueve cada bus hacia cada ciudad (solo de ejemplo; lo normal es un solo destino)
+        for src in self.sources:
+            for dst in self.destinations:
+                anim = QPropertyAnimation(src, b"pos", self)
+                anim.setDuration(2000)
+                anim.setStartValue(src.pos())
+                anim.setEndValue(QPointF(dst.x() - src.pixmap().width(), dst.y()))
+                anim.setEasingCurve(QEasingCurve.InOutQuad)
+                self.animations.addAnimation(anim)
         self.animations.start()
-
-class IconItem(QGraphicsPixmapItem):
-    def __init__(self, image_path):
-        super().__init__()
-        pixmap = QPixmap(image_path)
-        if pixmap.isNull():
-            print(f"Error: No se pudo cargar la imagen {image_path}")
-        self.setPixmap(pixmap)
-
-class BusItem(IconItem):
-    def __init__(self):
-        super().__init__("img/bus.png") 
-
-class CityItem(IconItem):
-    def __init__(self):
-        super().__init__("img/cityscape.png") 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Modelo de Transporte")
+        self.setWindowTitle("Modelo de Transporte — Ofertas y Demandas")
         self.setGeometry(100, 100, 800, 600)
-        
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout()
-        central_widget.setLayout(layout)
-        
-        # Controles de entrada
-        control_layout = QHBoxLayout()
-        self.source_spin = QSpinBox()
-        self.source_spin.setRange(1, 5)
-        self.dest_spin = QSpinBox()
-        self.dest_spin.setRange(1, 5)
-        
-        control_layout.addWidget(QLabel("Fuentes:"))
-        control_layout.addWidget(self.source_spin)
-        control_layout.addWidget(QLabel("Destinos:"))
-        control_layout.addWidget(self.dest_spin)
-        
-        generate_btn = QPushButton("Generar Diagrama")
-        generate_btn.clicked.connect(self.generate_diagram)
-        animate_btn = QPushButton("Iniciar Transporte")
-        animate_btn.clicked.connect(self.start_animation)
-        
-        layout.addLayout(control_layout)
-        layout.addWidget(generate_btn)
-        layout.addWidget(animate_btn)
-        
-        # Vista del diagrama
+
+        central = QWidget(self)
+        self.setCentralWidget(central)
+        vlay = QVBoxLayout(central)
+
+        # Controles
+        hlay = QHBoxLayout()
+        self.spin_sources = QSpinBox()
+        self.spin_sources.setRange(1, 5)
+        self.spin_dest   = QSpinBox()
+        self.spin_dest.setRange(1, 5)
+
+        hlay.addWidget(QLabel("Ofertas:"))
+        hlay.addWidget(self.spin_sources)
+        hlay.addWidget(QLabel("Demandas:"))
+        hlay.addWidget(self.spin_dest)
+
+        btn_gen = QPushButton("Generar Diagrama")
+        btn_gen.clicked.connect(self.on_generate)
+        btn_anim = QPushButton("Iniciar Transporte")
+        btn_anim.clicked.connect(self.on_animate)
+
+        hlay.addWidget(btn_gen)
+        hlay.addWidget(btn_anim)
+        vlay.addLayout(hlay)
+
+        # Vista de diagrama
         self.diagram = TransportationDiagram()
-        layout.addWidget(self.diagram)
-        
-    def generate_diagram(self):
-        num_sources = self.source_spin.value()
-        num_destinations = self.dest_spin.value()
-        self.diagram.create_diagram(num_sources, num_destinations)
-        
-    def start_animation(self):
+        vlay.addWidget(self.diagram)
+
+    def on_generate(self):
+        self.diagram.create_diagram(
+            self.spin_sources.value(),
+            self.spin_dest.value()
+        )
+
+    def on_animate(self):
         self.diagram.animate_transport()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+    win = MainWindow()
+    win.show()
     sys.exit(app.exec_())

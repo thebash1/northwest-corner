@@ -11,6 +11,22 @@ class Window(QMainWindow):
         super().__init__()
         # self.initUI()
 
+        def createBtn(nameBtn):
+            return QPushButton(nameBtn)
+        
+        # def createMenu():
+        #     menubar = QMenuBar()
+        #     actionFile = menubar.addMenu("Archivo")
+        #     actionFile.addAction("Nuevo archivo")
+        #     actionFile.addSeparator()
+        #     actionFile.addAction("Salir sin guardar")
+            
+        #     menubar.addMenu("Editar")
+        #     menubar.addMenu("Ver")
+        #     menubar.addMenu("Ayuda")
+        
+        #     return menubar
+        
         # configuración básica de la ventana
         self.setWindowTitle("PyQt5 window")
         self.resize(1024,576)
@@ -22,12 +38,12 @@ class Window(QMainWindow):
         # layout para organizar elementos
         layout = QVBoxLayout()
         centralWidget.setLayout(layout)
-
-
+        
         # botones
-        button = QPushButton("btn1")
-        button.size()
-        layout.addWidget(button)
+        btn = createBtn('btn1')
+        
+        # agregar elementos a widget
+        layout.addWidget(btn)
         
 # region
     # def initUI(self):
@@ -59,8 +75,8 @@ if __name__ == "__main__": # ejecutar archivo
 
     app = QApplication(sys.argv)
     app.setFont(font)
-    main_window = Window()
-    main_window.show()
+    mainWindow = Window()
+    mainWindow.show()
     sys.exit(app.exec_())
 
 
