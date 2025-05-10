@@ -1,13 +1,16 @@
 import os
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QPropertyAnimation, QEasingCurve 
-from PyQt5.QtGui import QPixmap, QPen, QBrush
+from PyQt5.QtCore import (
+    Qt, QPointF, QPropertyAnimation, QEasingCurve, 
+    QSequentialAnimationGroup, QParallelAnimationGroup, QLineF
+)
+from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout,
     QLabel, QSpinBox, QPushButton,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsOpacityEffect, QGraphicsPolygonItem
 )
 
 class IconItem(QGraphicsPixmapItem):
@@ -37,8 +40,9 @@ class TransportationDiagram(QGraphicsView):
         self.setScene(self.scene)
         self.sources = []
         self.destinations = []
-        self.animations = QSequentialAnimationGroup(self)
-
+        self.creation_animations = QSequentialAnimationGroup(self)  # Animaciones iniciales
+        self.move_animations = QParallelAnimationGroup(self)  # Animaciones de movimiento
+        
     def create_diagram(self, num_sources: int, num_destinations: int):
         self.scene.clear()
         self.sources.clear()
