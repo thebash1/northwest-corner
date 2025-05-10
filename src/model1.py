@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem
 )
 from PyQt5.QtCore import Qt, QPointF, QParallelAnimationGroup, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QPixmap, QPen
+from PyQt5.QtGui import QPixmap, QPen, QPainter
 
 class IconItem(QGraphicsPixmapItem):
     def __init__(self, image_path: str, width: int, height: int):
@@ -21,18 +21,18 @@ class IconItem(QGraphicsPixmapItem):
 class BusItem(IconItem):
     def __init__(self):
         # Ruta relativa desde el ejecutable o desde tu script
-        super().__init__("icons/bus.png", width=50, height=30)
+        super().__init__("img/bus.png", width=50, height=30)
 
 class CityItem(IconItem):
     def __init__(self):
-        super().__init__("icons/city.png", width=80, height=80)
+        super().__init__("img/cityscape.png", width=80, height=80)
 
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
         super().__init__()
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.setRenderHint(self.RenderHints(QApplication.instance().style().AA_UseHighDpiPixmaps))
+        # self.setRenderHint(self.RenderHints(QPainter))
         self.sources = []
         self.destinations = []
         self.animations = QParallelAnimationGroup(self)
