@@ -4,7 +4,7 @@ import random
 
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt, QPointF, QLineF
-from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF, QFont
+from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF, QFont, QColor
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout,
@@ -19,6 +19,9 @@ CAPITALES_COLOMBIA = [
     "Sincelejo", "Valledupar", "Quibdó", "Riohacha", "Florencia", "San Andrés", "Mocoa", "Yopal",
     "Popayán", "Tunja", "Leticia", "Arauca", "Inírida", "Puerto Carreño", "Mitú", "San José del Guaviare"
 ]
+
+# Colores predeterminados para los buses
+BUS_COLORS = [Qt.blue, Qt.red, QColor(255, 165, 0), QColor(0, 100, 0)]  # Azul, Rojo, Naranja, Verde Oscuro
 
 class IconItem(QGraphicsPixmapItem):
     def __init__(self, image_path: str, width: int, height: int):
@@ -58,11 +61,11 @@ class TransportationDiagram(QGraphicsView):
         # Crear buses con texto
         for i in range(num_sources):
             x = 50
-            y = 50 + i * 200
+            y = 50 + i * 150
             bus = BusItem()
             bus.setPos(x, y)
             self.scene.addItem(bus)
-            self.sources.append(bus)
+            self.sources.append((bus, BUS_COLORS[i % len(BUS_COLORS)]))  # Asociar bus con su color
 
             # Agregar texto encima del bus
             text = QGraphicsTextItem(f"Bus {i + 1}")
@@ -74,7 +77,7 @@ class TransportationDiagram(QGraphicsView):
         # Crear ciudades con texto
         for i, city_name in enumerate(ciudades_seleccionadas):
             x = 600
-            y = 50 + i * 200
+            y = 50 + i * 150
             city = CityItem()
             city.setPos(x, y)
             self.scene.addItem(city)
@@ -87,25 +90,24 @@ class TransportationDiagram(QGraphicsView):
             text.setPos(x, y - 20)  # Posicionar el texto encima de la ciudad
             self.scene.addItem(text)
 
-        # Crear líneas con flechas y colores diferentes
-        colors = [Qt.red, Qt.blue, Qt.green, Qt.yellow, Qt.magenta]
-        for i, src in enumerate(self.sources):
-            for j, dst in enumerate(self.destinations):
+        # Crear líneas con flechas y colores únicos por bus
+        for bus, color in self.sources:
+            for dst in self.destinations:
                 # Crear línea
                 line = QGraphicsLineItem(
-                    src.x() + src.pixmap().width() / 2, src.y() + src.pixmap().height() / 2,
-                    dst.x() + dst.pixmap().width() / 2, dst.y() + dst.pixmap().height() / 2
+                    bus.x() + bus.pixmap().width(), bus.y() + bus.pixmap().height() / 2,  # Salida desde fuera del bus
+                    dst.x() - 10, dst.y() + dst.pixmap().height() / 2  # Entrada antes de la ciudad
                 )
-                pen = QPen(colors[(i + j) % len(colors)], 2, Qt.SolidLine)
+                pen = QPen(color, 2, Qt.SolidLine)
                 pen.setCapStyle(Qt.RoundCap)
                 line.setPen(pen)
                 self.scene.addItem(line)
 
                 # Crear flecha
                 arrow = QGraphicsPolygonItem()
-                arrow.setBrush(QBrush(colors[(i + j) % len(colors)]))
+                arrow.setBrush(QBrush(color))
                 arrow.setPolygon(self._create_arrow_polygon(
-                    dst.x() + dst.pixmap().width() / 2, dst.y() + dst.pixmap().height() / 2
+                    dst.x() - 10, dst.y() + dst.pixmap().height() / 2  # Flecha antes de la ciudad
                 ))
                 self.scene.addItem(arrow)
 
@@ -131,9 +133,9 @@ class MainWindow(QMainWindow):
         # Controles
         hlay = QHBoxLayout()
         self.spin_sources = QSpinBox()
-        self.spin_sources.setRange(1, 5)
+        self.spin_sources.setRange(1, 9)
         self.spin_dest = QSpinBox()
-        self.spin_dest.setRange(1, 5)
+        self.spin_dest.setRange(1, 9)
 
         hlay.addWidget(QLabel("Ofertas:"))
         hlay.addWidget(self.spin_sources)
