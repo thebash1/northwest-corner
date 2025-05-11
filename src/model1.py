@@ -12,6 +12,14 @@ from PyQt5.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsPolygonItem, QGraphicsTextItem
 )
 
+# Lista de capitales de los departamentos de Colombia
+CAPITALES_COLOMBIA = [
+    "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Cúcuta", "Bucaramanga", "Pereira",
+    "Manizales", "Ibagué", "Santa Marta", "Villavicencio", "Pasto", "Montería", "Armenia", "Neiva",
+    "Sincelejo", "Valledupar", "Quibdó", "Riohacha", "Florencia", "San Andrés", "Mocoa", "Yopal",
+    "Popayán", "Tunja", "Leticia", "Arauca", "Inírida", "Puerto Carreño", "Mitú", "San José del Guaviare"
+]
+
 class IconItem(QGraphicsPixmapItem):
     def __init__(self, image_path: str, width: int, height: int):
         super().__init__()
@@ -44,23 +52,40 @@ class TransportationDiagram(QGraphicsView):
         self.sources.clear()
         self.destinations.clear()
 
-        # Crear buses
+        # Seleccionar nombres de ciudades aleatoriamente
+        ciudades_seleccionadas = random.sample(CAPITALES_COLOMBIA, num_destinations)
+
+        # Crear buses con texto
         for i in range(num_sources):
             x = 50
-            y = 50 + i * 100
+            y = 50 + i * 200
             bus = BusItem()
             bus.setPos(x, y)
             self.scene.addItem(bus)
             self.sources.append(bus)
 
-        # Crear ciudades
-        for i in range(num_destinations):
+            # Agregar texto encima del bus
+            text = QGraphicsTextItem(f"Bus {i + 1}")
+            text.setFont(QFont("Arial", 10))
+            text.setDefaultTextColor(Qt.black)
+            text.setPos(x, y - 20)  # Posicionar el texto encima del bus
+            self.scene.addItem(text)
+
+        # Crear ciudades con texto
+        for i, city_name in enumerate(ciudades_seleccionadas):
             x = 600
-            y = 50 + i * 100
+            y = 50 + i * 200
             city = CityItem()
             city.setPos(x, y)
             self.scene.addItem(city)
             self.destinations.append(city)
+
+            # Agregar texto encima de la ciudad
+            text = QGraphicsTextItem(city_name)
+            text.setFont(QFont("Arial", 10))
+            text.setDefaultTextColor(Qt.black)
+            text.setPos(x, y - 20)  # Posicionar el texto encima de la ciudad
+            self.scene.addItem(text)
 
         # Crear líneas con flechas y colores diferentes
         colors = [Qt.red, Qt.blue, Qt.green, Qt.yellow, Qt.magenta]
