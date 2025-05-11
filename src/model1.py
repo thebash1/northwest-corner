@@ -1,16 +1,15 @@
 import os
 import sys
+import random
 
-from PyQt5.QtCore import (
-    Qt, QPointF, QPropertyAnimation, QEasingCurve, 
-    QSequentialAnimationGroup, QParallelAnimationGroup, QLineF
-)
-from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import Qt, QPointF, QLineF
+from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF, QFont
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout,
     QLabel, QSpinBox, QPushButton,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsOpacityEffect, QGraphicsPolygonItem
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsPolygonItem, QGraphicsTextItem
 )
 
 class IconItem(QGraphicsPixmapItem):
@@ -26,7 +25,6 @@ class IconItem(QGraphicsPixmapItem):
 
 class BusItem(IconItem):
     def __init__(self):
-        # Ruta relativa desde el ejecutable o desde tu script
         super().__init__("img/bus.png", width=50, height=30)
 
 class CityItem(IconItem):
@@ -40,84 +38,51 @@ class TransportationDiagram(QGraphicsView):
         self.setScene(self.scene)
         self.sources = []
         self.destinations = []
-        self.creation_animations = QSequentialAnimationGroup(self)  # Animaciones iniciales
-        self.move_animations = QParallelAnimationGroup(self)  # Animaciones de movimiento
-        
+
     def create_diagram(self, num_sources: int, num_destinations: int):
         self.scene.clear()
         self.sources.clear()
         self.destinations.clear()
-        self.animations = QSequentialAnimationGroup(self)
 
-        # Crear buses con animación de opacidad
+        # Crear buses
         for i in range(num_sources):
             x = 50
-            y = 50 + i * 200
+            y = 50 + i * 100
             bus = BusItem()
             bus.setPos(x, y)
             self.scene.addItem(bus)
             self.sources.append(bus)
 
-            # Animación de opacidad para el bus
-            effect = QGraphicsOpacityEffect()
-            bus.setGraphicsEffect(effect)
-            anim = QPropertyAnimation(effect, b"opacity")
-            anim.setDuration(500)
-            anim.setStartValue(0)
-            anim.setEndValue(1)
-            self.animations.addAnimation(anim)
-
-        # Crear ciudades con animación de opacidad
+        # Crear ciudades
         for i in range(num_destinations):
             x = 600
-            y = 50 + i * 200
+            y = 50 + i * 100
             city = CityItem()
             city.setPos(x, y)
             self.scene.addItem(city)
             self.destinations.append(city)
 
-            # Animación de opacidad para la ciudad
-            effect = QGraphicsOpacityEffect()
-            city.setGraphicsEffect(effect)
-            anim = QPropertyAnimation(effect, b"opacity")
-            anim.setDuration(500)
-            anim.setStartValue(0)
-            anim.setEndValue(1)
-            self.animations.addAnimation(anim)
-
         # Crear líneas con flechas y colores diferentes
         colors = [Qt.red, Qt.blue, Qt.green, Qt.yellow, Qt.magenta]
         for i, src in enumerate(self.sources):
             for j, dst in enumerate(self.destinations):
+                # Crear línea
                 line = QGraphicsLineItem(
                     src.x() + src.pixmap().width() / 2, src.y() + src.pixmap().height() / 2,
-                    src.x() + src.pixmap().width() / 2, src.y() + src.pixmap().height() / 2  # Línea inicial (sin longitud)
+                    dst.x() + dst.pixmap().width() / 2, dst.y() + dst.pixmap().height() / 2
                 )
                 pen = QPen(colors[(i + j) % len(colors)], 2, Qt.SolidLine)
                 pen.setCapStyle(Qt.RoundCap)
                 line.setPen(pen)
                 self.scene.addItem(line)
 
-                # Animación para extender la línea
-                anim = QPropertyAnimation(line, b"line")
-                anim.setDuration(1000)
-                anim.setStartValue(line.line())
-                anim.setEndValue(QLineF(
-                    src.x() + src.pixmap().width() / 2, src.y() + src.pixmap().height() / 2,
-                    dst.x() + dst.pixmap().width() / 2, dst.y() + dst.pixmap().height() / 2
-                ))
-                self.animations.addAnimation(anim)
-
-                # Agregar flecha al final de la línea
+                # Crear flecha
                 arrow = QGraphicsPolygonItem()
                 arrow.setBrush(QBrush(colors[(i + j) % len(colors)]))
                 arrow.setPolygon(self._create_arrow_polygon(
                     dst.x() + dst.pixmap().width() / 2, dst.y() + dst.pixmap().height() / 2
                 ))
                 self.scene.addItem(arrow)
-
-        # Iniciar animaciones secuenciales
-        self.animations.start()
 
     def _create_arrow_polygon(self, x, y):
         """Crea un triángulo para representar una flecha."""
@@ -127,24 +92,12 @@ class TransportationDiagram(QGraphicsView):
             QPointF(x - size, y - size / 2),
             QPointF(x - size, y + size / 2)
         ])
-    
-    def animate_transport(self):
-        # Mueve cada bus hacia cada ciudad (solo de ejemplo; lo normal es un solo destino)
-        for src in self.sources:
-            for dst in self.destinations:
-                anim = QPropertyAnimation(src, b"pos", self)
-                anim.setDuration(2000)
-                anim.setStartValue(src.pos())
-                anim.setEndValue(QPointF(dst.x() + dst.pixmap().width() / 2 - src.pixmap().width() / 2, dst.y()))
-                anim.setEasingCurve(QEasingCurve.InOutQuad)
-                self.animations.addAnimation(anim)
-        self.animations.start()
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Modelo de Transporte — Ofertas y Demandas")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1024, 576)
 
         central = QWidget(self)
         self.setCentralWidget(central)
@@ -164,11 +117,8 @@ class MainWindow(QMainWindow):
 
         btn_gen = QPushButton("Generar Diagrama")
         btn_gen.clicked.connect(self.on_generate)
-        btn_anim = QPushButton("Iniciar Transporte")
-        btn_anim.clicked.connect(self.on_animate)
 
         hlay.addWidget(btn_gen)
-        hlay.addWidget(btn_anim)
         vlay.addLayout(hlay)
 
         # Vista de diagrama
@@ -176,13 +126,23 @@ class MainWindow(QMainWindow):
         vlay.addWidget(self.diagram)
 
     def on_generate(self):
-        self.diagram.create_diagram(
-            self.spin_sources.value(),
-            self.spin_dest.value()
-        )
+        # Validar el número de buses y ciudades
+        num_sources = self.spin_sources.value()
+        num_destinations = self.spin_dest.value()
 
-    def on_animate(self):
-        self.diagram.animate_transport()
+        if num_sources > 4 or num_destinations > 4:
+            self.show_error_message("El número máximo de buses y ciudades es 4.")
+            return
+
+        self.diagram.create_diagram(num_sources, num_destinations)
+
+    def show_error_message(self, message: str):
+        """Muestra un mensaje de error en un cuadro de diálogo."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Error de Validación")
+        msg_box.setText(message)
+        msg_box.exec_()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
