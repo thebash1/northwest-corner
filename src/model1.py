@@ -2,15 +2,13 @@ import os
 import sys
 import random
 
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import Qt, QPointF, QLineF
-from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF, QFont, QColor
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QHBoxLayout,
-    QLabel, QSpinBox, QPushButton,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsPolygonItem, QGraphicsTextItem
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QSpinBox, QPushButton, QMessageBox, QGraphicsView, QGraphicsScene,
+    QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsPolygonItem, QGraphicsTextItem
 )
+from PyQt5.QtGui import QPixmap, QPen, QBrush, QPolygonF, QFont, QColor, QIcon
+from PyQt5.QtCore import Qt, QPointF
 
 # Lista de capitales de los departamentos de Colombia
 CAPITALES_COLOMBIA = [
@@ -23,6 +21,7 @@ CAPITALES_COLOMBIA = [
 # Colores predeterminados para los buses
 BUS_COLORS = [Qt.blue, Qt.red, QColor(255, 165, 0), QColor(0, 100, 0)]  # Azul, Rojo, Naranja, Verde Oscuro
 
+
 class IconItem(QGraphicsPixmapItem):
     def __init__(self, image_path: str, width: int, height: int):
         super().__init__()
@@ -34,13 +33,16 @@ class IconItem(QGraphicsPixmapItem):
         scaled = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.setPixmap(scaled)
 
+
 class BusItem(IconItem):
     def __init__(self):
         super().__init__("img/bus.png", width=50, height=30)
 
+
 class CityItem(IconItem):
     def __init__(self):
         super().__init__("img/cityscape.png", width=60, height=60)
+
 
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
@@ -120,11 +122,13 @@ class TransportationDiagram(QGraphicsView):
             QPointF(x - size, y + size / 2)
         ])
 
-class MainWindow(QMainWindow):
-    def __init__(self):
+
+class DiagramWindow(QMainWindow):
+    def __init__(self, start_window):
         super().__init__()
+        self.start_window = start_window
         self.setWindowTitle("Modelo de Transporte — Ofertas y Demandas")
-        self.setGeometry(100, 100, 1024, 576)
+        self.setFixedSize(1024, 576)  # Establecer tamaño fijo
 
         central = QWidget(self)
         self.setCentralWidget(central)
@@ -133,9 +137,9 @@ class MainWindow(QMainWindow):
         # Controles
         hlay = QHBoxLayout()
         self.spin_sources = QSpinBox()
-        self.spin_sources.setRange(1, 9)
+        self.spin_sources.setRange(1, 4)
         self.spin_dest = QSpinBox()
-        self.spin_dest.setRange(1, 9)
+        self.spin_dest.setRange(1, 4)
 
         hlay.addWidget(QLabel("Ofertas:"))
         hlay.addWidget(self.spin_sources)
@@ -145,7 +149,13 @@ class MainWindow(QMainWindow):
         btn_gen = QPushButton("Generar Diagrama")
         btn_gen.clicked.connect(self.on_generate)
 
+        btn_back = QPushButton()
+        btn_back.setIcon(QIcon.fromTheme("go-previous"))  # Ícono de flecha para regresar
+        btn_back.setText("Regresar")
+        btn_back.clicked.connect(self.go_back)
+
         hlay.addWidget(btn_gen)
+        hlay.addWidget(btn_back)
         vlay.addLayout(hlay)
 
         # Vista de diagrama
@@ -157,22 +167,82 @@ class MainWindow(QMainWindow):
         num_sources = self.spin_sources.value()
         num_destinations = self.spin_dest.value()
 
-        if num_sources > 4 or num_destinations > 4:
-            self.show_error_message("El número máximo de buses y ciudades es 4.")
-            return
-
         self.diagram.create_diagram(num_sources, num_destinations)
 
-    def show_error_message(self, message: str):
-        """Muestra un mensaje de error en un cuadro de diálogo."""
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("Error de Validación")
-        msg_box.setText(message)
-        msg_box.exec_()
+    def go_back(self):
+        self.close()
+        self.start_window.show()
+
+
+class StartWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Modelo de Transporte — Inicio")
+        self.setFixedSize(1024, 576)  # Establecer tamaño fijo
+
+        # Configurar el widget central
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+
+        # Obtener la ruta absoluta de la imagen de la plantilla
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_dir, "img", "template.png")  # Cambiar para acceder a la carpeta 'img'
+
+        # Agregar la imagen de la plantilla
+        self.image_label = QLabel(self)
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            print(f"Error: No se pudo cargar la imagen en {image_path}. Verifica que el archivo exista.")
+        else:
+            # Escalar la imagen al tamaño de la ventana
+            scaled_pixmap = pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            self.image_label.setPixmap(scaled_pixmap)
+        self.image_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.image_label)
+
+        # Agregar la imagen de la plantilla
+        self.image_label = QLabel(self)
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            print(f"Error: No se pudo cargar la imagen en {image_path}. Verifica que el archivo exista.")
+        self.image_label.setPixmap(pixmap)
+        self.image_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.image_label)
+
+        # Controles para ingresar datos
+        controls_layout = QHBoxLayout()
+        self.spin_buses = QSpinBox()
+        self.spin_buses.setRange(1, 4)  # Máximo 4 buses
+        self.spin_cities = QSpinBox()
+        self.spin_cities.setRange(1, 4)  # Máximo 4 ciudades
+
+        controls_layout.addWidget(QLabel("Número de buses:"))
+        controls_layout.addWidget(self.spin_buses)
+        controls_layout.addWidget(QLabel("Número de ciudades:"))
+        controls_layout.addWidget(self.spin_cities)
+        layout.addLayout(controls_layout)
+
+        # Botón para iniciar el programa
+        self.start_button = QPushButton("Iniciar Programa")
+        self.start_button.clicked.connect(self.start_program)
+        layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
+
+    def start_program(self):
+        # Obtener los valores ingresados
+        num_buses = self.spin_buses.value()
+        num_cities = self.spin_cities.value()
+
+        # Abrir la ventana del diagrama y pasar los valores
+        self.diagram_window = DiagramWindow(self)
+        self.diagram_window.spin_sources.setValue(num_buses)
+        self.diagram_window.spin_dest.setValue(num_cities)
+        self.diagram_window.show()
+        self.hide()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = MainWindow()
-    win.show()
+    start_window = StartWindow()
+    start_window.show()
     sys.exit(app.exec_())
