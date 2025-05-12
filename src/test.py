@@ -56,6 +56,14 @@ class CityItem(IconItem):
     def __init__(self):
         super().__init__("img/cityscape.png", width=60, height=60)
 
+class ValidationError:
+    def show_error_message(self, message: str):
+        """Muestra un mensaje de error en un cuadro de diálogo."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Error de Validación")
+        msg_box.setText(message)
+        msg_box.exec_()
 
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
@@ -149,7 +157,7 @@ class DiagramWindow(QMainWindow):
         self.setFixedSize(1024, 576)  # Establecer tamaño fijo
 
         IconWindowManager.apply_icon(self)
-        
+
         central = QWidget(self)
         self.setCentralWidget(central)
         vlay = QVBoxLayout(central)
@@ -157,9 +165,9 @@ class DiagramWindow(QMainWindow):
         # Controles
         hlay = QHBoxLayout()
         self.spin_sources = QSpinBox()
-        self.spin_sources.setRange(1, 9)
+        self.spin_sources.setRange(1,9)
         self.spin_dest = QSpinBox()
-        self.spin_dest.setRange(1, 9)
+        self.spin_dest.setRange(1,9)
 
         hlay.addWidget(QLabel("Ofertas:"))
         hlay.addWidget(self.spin_sources)
@@ -188,87 +196,72 @@ class DiagramWindow(QMainWindow):
         num_destinations = self.spin_dest.value()
 
         if num_sources > 4 or num_destinations > 4:
-            self.show_error_message("El número máximo de buses y ciudades es 4.")
+            ValidationError.show_error_message(self,"El número máximo de buses y ciudades es 4.")
             return
         
         self.diagram.create_diagram(num_sources, num_destinations)
-
-    def show_error_message(self, message: str):
-        """Muestra un mensaje de error en un cuadro de diálogo."""
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("Error de Validación")
-        msg_box.setText(message)
-        msg_box.exec_()
 
     def go_back(self):
         self.close()
         self.start_window.show()
 
-
-class StartWindow(QMainWindow):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Modelo de Transporte — Inicio")
-        self.setFixedSize(1024, 576)  # Establecer tamaño fijo
+        self.setWindowTitle("Modelo de trasporte - Inicio")
+        self.resize(1024, 576)
 
-        # Aplicar ícono a la ventana
         IconWindowManager.apply_icon(self)
 
-        # Configurar el widget central
-        central_widget = QWidget(self)
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
+        # Layout principal
+        main_layout = QVBoxLayout(self)
 
-        # Obtener la ruta absoluta de la imagen de la plantilla
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(current_dir, "img", "template.png")  # Cambiar para acceder a la carpeta 'img'
-
-        # Agregar la imagen de la plantilla
+        # Contenedor para la imagen
         self.image_label = QLabel(self)
-        pixmap = QPixmap(image_path)
+        pixmap = QPixmap("C:\\Users\\Usuario\\Desktop\\Git\\northwest-corner\\src\\img\\template.png")
         if pixmap.isNull():
-            print(f"Error: No se pudo cargar la imagen en {image_path}. Verifica que el archivo exista.")
+            print("Error: No se pudo cargar la imagen. Verifica la ruta.")
+            self.image_label.setText("No se pudo cargar la imagen")
+            self.image_label.setAlignment(Qt.AlignCenter)
         else:
-            # Escalar la imagen al tamaño de la ventana
-            scaled_pixmap = pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            scaled_pixmap = pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(scaled_pixmap)
         self.image_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.image_label)
 
-        # Agregar la imagen de la plantilla
-        self.image_label = QLabel(self)
-        pixmap = QPixmap(image_path)
-        if pixmap.isNull():
-            print(f"Error: No se pudo cargar la imagen en {image_path}. Verifica que el archivo exista.")
-        self.image_label.setPixmap(pixmap)
-        self.image_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.image_label)
+        # Contenedor para superposición
+        overlay_widget = QWidget(self)
+        overlay_layout = QVBoxLayout(overlay_widget)
+        overlay_layout.setAlignment(Qt.AlignTop)  # Controles en la parte superior
 
-        # Controles para ingresar datos
+        # Controles
         controls_layout = QHBoxLayout()
         self.spin_buses = QSpinBox()
-        self.spin_buses.setRange(1, 9)  # Máximo 4 buses
+        self.spin_buses.setRange(1,9)
         self.spin_cities = QSpinBox()
-        self.spin_cities.setRange(1, 9)  # Máximo 4 ciudades
+        self.spin_cities.setRange(1,9)
 
         controls_layout.addWidget(QLabel("Número de buses:"))
         controls_layout.addWidget(self.spin_buses)
         controls_layout.addWidget(QLabel("Número de ciudades:"))
         controls_layout.addWidget(self.spin_cities)
-        layout.addLayout(controls_layout)
 
-        # Botón para iniciar el programa
+        # Botón
         self.start_button = QPushButton("Iniciar Programa")
         self.start_button.clicked.connect(self.start_program)
-        layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
+
+        overlay_layout.addLayout(controls_layout)
+        overlay_layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
+
+        # Agregar widgets al layout principal
+        main_layout.addWidget(self.image_label)
+        main_layout.addWidget(overlay_widget)
 
     def start_program(self):
         # Obtener los valores ingresados
         num_buses = self.spin_buses.value()
         num_cities = self.spin_cities.value()
         if num_buses > 4 or num_cities > 4:
-            self.show_error_message("El número máximo de buses y ciudades es 4.")
+            ValidationError.show_error_message(self, "El número máximo de buses y ciudades es 4.")
             return
         
         # Abrir la ventana del diagrama y pasar los valores
@@ -278,16 +271,8 @@ class StartWindow(QMainWindow):
         self.diagram_window.show()
         self.hide()
 
-    def show_error_message(self, message: str):
-        """Muestra un mensaje de error en un cuadro de diálogo."""
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("Error de Validación")
-        msg_box.setText(message)
-        msg_box.exec_()
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    start_window = StartWindow()
+    start_window = MainWindow()
     start_window.show()
     sys.exit(app.exec_())
