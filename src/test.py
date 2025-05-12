@@ -21,7 +21,6 @@ CAPITALES_COLOMBIA = [
 # Colores predeterminados para los buses
 BUS_COLORS = [Qt.blue, Qt.red, QColor(255, 165, 0), QColor(0, 100, 0)]  # Azul, Rojo, Naranja, Verde Oscuro
 
-
 class IconItem(QGraphicsPixmapItem):
     def __init__(self, image_path: str, width: int, height: int):
         super().__init__()
@@ -33,6 +32,20 @@ class IconItem(QGraphicsPixmapItem):
         scaled = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.setPixmap(scaled)
 
+class IconWindowManager:
+    path="C:\\Users\\Usuario\\Desktop\\Git\\northwest-corner\\src\\img\\open-box.png"
+    
+    @staticmethod
+    def apply_icon(window):
+        """
+        Aplica el ícono a la ventana proporcionada.
+        :param window: Instancia de una ventana (QWidget o QMainWindow).
+        """
+        abs_path = os.path.abspath(IconWindowManager.path)
+        if not os.path.exists(abs_path):
+            raise FileNotFoundError(f"No se encontró el ícono en la ruta: {abs_path}")
+        icon = QIcon(abs_path)
+        window.setWindowIcon(icon)
 
 class BusItem(IconItem):
     def __init__(self):
@@ -77,6 +90,7 @@ class TransportationDiagram(QGraphicsView):
             self.scene.addItem(text)
 
         # Crear ciudades con texto
+        select_city = []
         for i, city_name in enumerate(ciudades_seleccionadas):
             x = 600
             y = 50 + i * 200
@@ -91,7 +105,11 @@ class TransportationDiagram(QGraphicsView):
             text.setDefaultTextColor(Qt.black)
             text.setPos(x, y - 20)  # Posicionar el texto encima de la ciudad
             self.scene.addItem(text)
-
+            if (city_name not in select_city):
+                select_city.append(city_name)
+                print(select_city)
+                    
+            
         # Crear líneas con flechas y colores únicos por bus
         for bus, color in self.sources:
             for dst in self.destinations:
@@ -130,6 +148,8 @@ class DiagramWindow(QMainWindow):
         self.setWindowTitle("Modelo de Transporte — Ofertas y Demandas")
         self.setFixedSize(1024, 576)  # Establecer tamaño fijo
 
+        IconWindowManager.apply_icon(self)
+        
         central = QWidget(self)
         self.setCentralWidget(central)
         vlay = QVBoxLayout(central)
@@ -137,9 +157,9 @@ class DiagramWindow(QMainWindow):
         # Controles
         hlay = QHBoxLayout()
         self.spin_sources = QSpinBox()
-        self.spin_sources.setRange(1, 4)
+        self.spin_sources.setRange(1, 9)
         self.spin_dest = QSpinBox()
-        self.spin_dest.setRange(1, 4)
+        self.spin_dest.setRange(1, 9)
 
         hlay.addWidget(QLabel("Ofertas:"))
         hlay.addWidget(self.spin_sources)
@@ -167,7 +187,19 @@ class DiagramWindow(QMainWindow):
         num_sources = self.spin_sources.value()
         num_destinations = self.spin_dest.value()
 
+        if num_sources > 4 or num_destinations > 4:
+            self.show_error_message("El número máximo de buses y ciudades es 4.")
+            return
+        
         self.diagram.create_diagram(num_sources, num_destinations)
+
+    def show_error_message(self, message: str):
+        """Muestra un mensaje de error en un cuadro de diálogo."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Error de Validación")
+        msg_box.setText(message)
+        msg_box.exec_()
 
     def go_back(self):
         self.close()
@@ -179,6 +211,9 @@ class StartWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Modelo de Transporte — Inicio")
         self.setFixedSize(1024, 576)  # Establecer tamaño fijo
+
+        # Aplicar ícono a la ventana
+        IconWindowManager.apply_icon(self)
 
         # Configurar el widget central
         central_widget = QWidget(self)
@@ -213,9 +248,9 @@ class StartWindow(QMainWindow):
         # Controles para ingresar datos
         controls_layout = QHBoxLayout()
         self.spin_buses = QSpinBox()
-        self.spin_buses.setRange(1, 4)  # Máximo 4 buses
+        self.spin_buses.setRange(1, 9)  # Máximo 4 buses
         self.spin_cities = QSpinBox()
-        self.spin_cities.setRange(1, 4)  # Máximo 4 ciudades
+        self.spin_cities.setRange(1, 9)  # Máximo 4 ciudades
 
         controls_layout.addWidget(QLabel("Número de buses:"))
         controls_layout.addWidget(self.spin_buses)
@@ -232,13 +267,24 @@ class StartWindow(QMainWindow):
         # Obtener los valores ingresados
         num_buses = self.spin_buses.value()
         num_cities = self.spin_cities.value()
-
+        if num_buses > 4 or num_cities > 4:
+            self.show_error_message("El número máximo de buses y ciudades es 4.")
+            return
+        
         # Abrir la ventana del diagrama y pasar los valores
         self.diagram_window = DiagramWindow(self)
         self.diagram_window.spin_sources.setValue(num_buses)
         self.diagram_window.spin_dest.setValue(num_cities)
         self.diagram_window.show()
         self.hide()
+
+    def show_error_message(self, message: str):
+        """Muestra un mensaje de error en un cuadro de diálogo."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Error de Validación")
+        msg_box.setText(message)
+        msg_box.exec_()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
