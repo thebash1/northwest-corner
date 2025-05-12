@@ -65,6 +65,10 @@ class ValidationError:
         msg_box.setText(message)
         msg_box.exec_()
 
+    def add_data(list, item):
+        if item not in list:
+            list.append(item)
+
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
         super().__init__()
@@ -82,6 +86,8 @@ class TransportationDiagram(QGraphicsView):
         ciudades_seleccionadas = random.sample(CAPITALES_COLOMBIA, num_destinations)
 
         # Crear buses con texto
+        nodes = {}
+        buss = []
         for i in range(num_sources):
             x = 50
             y = 50 + i * 200
@@ -96,7 +102,8 @@ class TransportationDiagram(QGraphicsView):
             text.setDefaultTextColor(Qt.black)
             text.setPos(x, y - 20)  # Posicionar el texto encima del bus
             self.scene.addItem(text)
-
+            ValidationError.add_data(buss,"bus "+str(i+1))
+            print(buss)
         # Crear ciudades con texto
         select_city = []
         for i, city_name in enumerate(ciudades_seleccionadas):
@@ -113,11 +120,8 @@ class TransportationDiagram(QGraphicsView):
             text.setDefaultTextColor(Qt.black)
             text.setPos(x, y - 20)  # Posicionar el texto encima de la ciudad
             self.scene.addItem(text)
-            if (city_name not in select_city):
-                select_city.append(city_name)
-                print(select_city)
-                    
-            
+            ValidationError.add_data(select_city,city_name)             
+            print(select_city)
         # Crear líneas con flechas y colores únicos por bus
         for bus, color in self.sources:
             for dst in self.destinations:
