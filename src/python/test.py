@@ -33,7 +33,7 @@ class IconItem(QGraphicsPixmapItem):
         self.setPixmap(scaled)
 
 class IconWindowManager:
-    path="C:\\Users\\Usuario\\Desktop\\Git\\northwest-corner\\src\\img\\open-box.png"
+    path="C:\\Users\\Usuario\\Desktop\\git-learn\\northwest-corner\\src\\img\\template.png"
     
     @staticmethod
     def apply_icon(window):
@@ -69,6 +69,8 @@ class ValidationError:
         if item not in list:
             list.append(item)
 
+# ...existing code...
+
 class TransportationDiagram(QGraphicsView):
     def __init__(self):
         super().__init__()
@@ -76,18 +78,18 @@ class TransportationDiagram(QGraphicsView):
         self.setScene(self.scene)
         self.sources = []
         self.destinations = []
+        self.relations = {}  # Diccionario para guardar las relaciones
 
     def create_diagram(self, num_sources: int, num_destinations: int):
         self.scene.clear()
         self.sources.clear()
         self.destinations.clear()
+        self.relations.clear()  # Limpiar relaciones previas
 
         # Seleccionar nombres de ciudades aleatoriamente
         ciudades_seleccionadas = random.sample(CAPITALES_COLOMBIA, num_destinations)
 
         # Crear buses con texto
-        nodes = {}
-        buss = []
         for i in range(num_sources):
             x = 50
             y = 50 + i * 200
@@ -102,10 +104,8 @@ class TransportationDiagram(QGraphicsView):
             text.setDefaultTextColor(Qt.black)
             text.setPos(x, y - 20)  # Posicionar el texto encima del bus
             self.scene.addItem(text)
-            ValidationError.add_data(buss,"bus "+str(i+1))
-            print(buss)
+
         # Crear ciudades con texto
-        select_city = []
         for i, city_name in enumerate(ciudades_seleccionadas):
             x = 600
             y = 50 + i * 200
@@ -120,16 +120,23 @@ class TransportationDiagram(QGraphicsView):
             text.setDefaultTextColor(Qt.black)
             text.setPos(x, y - 20)  # Posicionar el texto encima de la ciudad
             self.scene.addItem(text)
-            ValidationError.add_data(select_city,city_name)             
-            print(select_city)
-        # Crear líneas con flechas y colores únicos por bus
-        for bus, color in self.sources:
-            for dst in self.destinations:
+
+        # Crear líneas con flechas, colores únicos por bus y etiquetas
+        for bus_index, (bus, color) in enumerate(self.sources):
+            bus_name = f"bus{bus_index + 1}"
+            self.relations[bus_name] = []  # Inicializar lista de relaciones para el bus
+
+            for city_index, dst in enumerate(self.destinations):
+                city_name = ciudades_seleccionadas[city_index]
+
+                # Coordenadas de inicio y fin de la línea
+                start_x = bus.x() + bus.pixmap().width()
+                start_y = bus.y() + bus.pixmap().height() / 2
+                end_x = dst.x() - 10
+                end_y = dst.y() + dst.pixmap().height() / 2
+
                 # Crear línea
-                line = QGraphicsLineItem(
-                    bus.x() + bus.pixmap().width(), bus.y() + bus.pixmap().height() / 2,  # Salida desde fuera del bus
-                    dst.x() - 10, dst.y() + dst.pixmap().height() / 2  # Entrada antes de la ciudad
-                )
+                line = QGraphicsLineItem(start_x, start_y, end_x, end_y)
                 pen = QPen(color, 2, Qt.SolidLine)
                 pen.setCapStyle(Qt.RoundCap)
                 line.setPen(pen)
@@ -138,10 +145,39 @@ class TransportationDiagram(QGraphicsView):
                 # Crear flecha
                 arrow = QGraphicsPolygonItem()
                 arrow.setBrush(QBrush(color))
-                arrow.setPolygon(self._create_arrow_polygon(
-                    dst.x() - 10, dst.y() + dst.pixmap().height() / 2  # Flecha antes de la ciudad
-                ))
+                arrow.setPolygon(self._create_arrow_polygon(end_x, end_y))
                 self.scene.addItem(arrow)
+
+                # Crear etiquetas xij y cij
+                xij = f"x{bus_index + 1}{city_index + 1}"
+                cij = f"c{bus_index + 1}{city_index + 1}"
+
+                # Calcular posición de las etiquetas
+                xij_x = start_x + 100  # 20 píxeles a la derecha del bus
+                xij_y = start_y
+
+                cij_x = end_x - 100  # 20 píxeles a la izquierda de la ciudad
+                cij_y = end_y
+
+                # Agregar texto xij
+                xij_text = QGraphicsTextItem(xij)
+                xij_text.setFont(QFont("Arial", 10))
+                xij_text.setDefaultTextColor(Qt.black)
+                xij_text.setPos(xij_x, xij_y - 10)  # Ajustar ligeramente hacia arriba
+                self.scene.addItem(xij_text)
+
+                # Agregar texto cij
+                cij_text = QGraphicsTextItem(cij)
+                cij_text.setFont(QFont("Arial", 10))
+                cij_text.setDefaultTextColor(Qt.black)
+                cij_text.setPos(cij_x, cij_y - 10)  # Ajustar ligeramente hacia arriba
+                self.scene.addItem(cij_text)
+
+                # Guardar relación en el diccionario
+                self.relations[bus_name].append((xij, cij))
+                if city_name not in self.relations:
+                    self.relations[city_name] = []
+                self.relations[city_name].append((xij, cij))
 
     def _create_arrow_polygon(self, x, y):
         """Crea un triángulo para representar una flecha."""
@@ -151,8 +187,7 @@ class TransportationDiagram(QGraphicsView):
             QPointF(x - size, y - size / 2),
             QPointF(x - size, y + size / 2)
         ])
-
-
+    
 class DiagramWindow(QMainWindow):
     def __init__(self, start_window):
         super().__init__()
@@ -222,7 +257,7 @@ class MainWindow(QWidget):
 
         # Contenedor para la imagen
         self.image_label = QLabel(self)
-        pixmap = QPixmap("C:\\Users\\Usuario\\Desktop\\Git\\northwest-corner\\src\\img\\template.png")
+        pixmap = QPixmap("C:\\Users\\Usuario\\Desktop\\git-learn\\northwest-corner\\src\\img\\template.png")
         if pixmap.isNull():
             print("Error: No se pudo cargar la imagen. Verifica la ruta.")
             self.image_label.setText("No se pudo cargar la imagen")
@@ -273,6 +308,7 @@ class MainWindow(QWidget):
         self.diagram_window.spin_sources.setValue(num_buses)
         self.diagram_window.spin_dest.setValue(num_cities)
         self.diagram_window.show()
+        self.diagram_window.on_generate()
         self.hide()
 
 if __name__ == "__main__":
