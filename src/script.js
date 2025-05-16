@@ -36,10 +36,27 @@ function generateDiagram() {
     const svg = document.getElementById('diagram-svg');
     svg.innerHTML = '';
     
-    // Calcular altura necesaria
-    const numElements = Math.max(numSources, numDest) * 200 + 200;
-    svg.style.minHeight = `${numElements}px`; // Ajustar dinámicamente
+    const numSources = parseInt(document.getElementById('num-sources').value);
+    const numDest = parseInt(document.getElementById('num-dest').value);
+    const cities = COLOMBIAN_CAPITALS.sort(() => 0.5 - Math.random()).slice(0, numDest);
+
+    if (numSources > 4 || numDest > 4) {
+        showError("El número máximo de buses y ciudades es 4.");
+        return;
+    }
+    // Ajustes clave -------------------------------------------------
+    const ELEMENT_SPACING = 200; // Más espacio entre elementos
+    const HORIZONTAL_MARGIN = 150; // Margen lateral aumentado
+    const BASE_HEIGHT = 0; // Altura base adicional
     
+    // Calcular dimensiones dinámicas
+    const maxElements = Math.max(numSources, numDest);
+    const diagramWidth = 1200; // Ancho aumentado
+    const diagramHeight = (maxElements * ELEMENT_SPACING) + BASE_HEIGHT;
+    
+    svg.style.minHeight = `${diagramHeight}px`;
+    svg.setAttribute('viewBox', `0 0 ${diagramWidth} ${diagramHeight}`);
+
     // Definir marcador de flecha
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
@@ -57,29 +74,31 @@ function generateDiagram() {
     defs.appendChild(marker);
     svg.appendChild(defs);
 
-    const numSources = parseInt(document.getElementById('num-sources').value);
-    const numDest = parseInt(document.getElementById('num-dest').value);
-    const cities = COLOMBIAN_CAPITALS.sort(() => 0.5 - Math.random()).slice(0, numDest);
-
     // Posicionar elementos
-    const busPositions = Array.from({length: numSources}, (_, i) => ({x: 50, y: 100 + i * 150}));
-    const cityPositions = cities.map((_, i) => ({x: 600, y: 100 + i * 150}));
+    const busPositions = Array.from({length: numSources}, (_, i) => ({
+        x: HORIZONTAL_MARGIN,
+        y: BASE_HEIGHT/2 + i * ELEMENT_SPACING
+    }));
+    
+    const cityPositions = cities.map((_, i) => ({
+        x: diagramWidth - HORIZONTAL_MARGIN,
+        y: BASE_HEIGHT/2 + i * ELEMENT_SPACING
+    }));
 
     // Dibujar buses
     busPositions.forEach((pos, i) => {
-        // Ícono de bus
         const bus = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        bus.setAttribute('href', 'bus.png');
-        bus.setAttribute('x', pos.x);
-        bus.setAttribute('y', pos.y - 25);
+        bus.setAttribute('href', 'img/bus.png'); // Asegurar que esta imagen existe
+        bus.setAttribute('x', pos.x - 35); // Centrar icono
+        bus.setAttribute('y', pos.y - 30);
         bus.setAttribute('width', '50');
         bus.setAttribute('height', '50');
         svg.appendChild(bus);
-
-        // Texto del bus
+        
+        // Texto
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', pos.x);
-        text.setAttribute('y', pos.y - 35);
+        text.setAttribute('y', pos.y - 40);
         text.textContent = `Bus ${i + 1}`;
         svg.appendChild(text);
     });
@@ -88,8 +107,8 @@ function generateDiagram() {
     cityPositions.forEach((pos, i) => {
         // Ícono de ciudad
         const city = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        city.setAttribute('href', 'city.png');
-        city.setAttribute('x', pos.x);
+        city.setAttribute('href', 'img/cityscape.png'); // Asegurar que esta imagen existe
+        city.setAttribute('x', pos.x - 30); // Centrar icono
         city.setAttribute('y', pos.y - 30);
         city.setAttribute('width', '60');
         city.setAttribute('height', '60');
@@ -97,8 +116,8 @@ function generateDiagram() {
 
         // Nombre de la ciudad
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', pos.x);
-        text.setAttribute('y', pos.y - 40);
+        text.setAttribute('x', pos.x - 50);
+        text.setAttribute('y', pos.y - 45);
         text.textContent = cities[i];
         svg.appendChild(text);
     });

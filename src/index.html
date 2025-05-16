@@ -16,11 +16,11 @@
                 <div class="input-group">
                     <label>
                         Número de buses:
-                        <input type="number" id="num-buses" min="1" max="9" value="4">
+                        <input type="number" id="num-buses" min="1" max="4" value="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
                     </label>
                     <label>
                         Número de ciudades:
-                        <input type="number" id="num-cities" min="1" max="9" value="4">
+                        <input type="number" id="num-cities" min="1" max="4" value="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
                     </label>
                 </div>
                 <button onclick="startProgram()">Iniciar Programa</button>
@@ -33,10 +33,10 @@
         <div class="controls">
             <button onclick="goBack()">← Regresar</button>
             <label>Ofertas:
-                <input type="number" id="num-sources" min="1" max="9" value="1">
+                <input type="number" id="num-sources" min="1" max="4" value="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
             </label>
             <label>Demandas:
-                <input type="number" id="num-dest" min="1" max="9" value="1">
+                <input type="number" id="num-dest" min="1" max="4" value="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
             </label>
             <button onclick="generateDiagram()">Generar Diagrama</button>
         </div>
