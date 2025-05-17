@@ -52,16 +52,23 @@ button:hover {
 }
 
 #diagram-container {
-    height: 70vh; /* Usar altura relativa */
+    height: 80dvh; /* Usar altura relativa */
     min-height: 500px;
     overflow: auto;
     position: relative;
+    padding-top: 20px;
 }
 
 #diagram-svg {
     width: 100%;
     height: auto; /* Altura automática según contenido */
     min-height: 1000px; /* Altura mínima base */
+}
+
+#diagram-svg text {
+    font-size: 16px;
+    font-weight: bold;
+    user-select: none;
 }
 
 .bus-icon, .city-icon {

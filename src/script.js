@@ -7,8 +7,18 @@ const COLOMBIAN_CAPITALS = [
 
 const BUS_COLORS = ['#0000FF', '#FF0000', '#FFA500', '#006400'];
 
+// Alternar posición vertical para evitar superposición
+const verticalOffset = (cityIdx % 2 === 0) ? -15 : 15;
+xij.setAttribute('y', xijY + verticalOffset);
+cij.setAttribute('y', cijY - verticalOffset);
+
 function showError(message) {
     alert(`Error de Validación:\n${message}`);
+}
+
+function clearInput(idBus, idCity) {
+    document.getElementById(idBus).value = '1';
+    document.getElementById(idCity).value = '1';
 }
 
 function startProgram() {
@@ -16,10 +26,16 @@ function startProgram() {
     const numCities = parseInt(document.getElementById('num-cities').value);
     
     if (numBuses > 4 || numCities > 4) {
-        showError("El número máximo de buses y ciudades es 4.");
+        showError("como máximo 4 buses y 4 ciudades");
+        clearInput('num-buses', 'num-cities');
         return;
     }
-    
+    if (numBuses < 1 || numCities < 1) {
+        showError("debe haber al menos 1 bus y 1 ciudad");
+        clearInput('num-buses', 'num-cities');
+        return;
+    }
+
     document.getElementById('start-window').classList.add('hidden');
     document.getElementById('diagram-window').classList.remove('hidden');
     document.getElementById('num-sources').value = numBuses;
@@ -33,21 +49,29 @@ function goBack() {
 }
 
 function generateDiagram() {
-    const svg = document.getElementById('diagram-svg');
-    svg.innerHTML = '';
     
     const numSources = parseInt(document.getElementById('num-sources').value);
     const numDest = parseInt(document.getElementById('num-dest').value);
     const cities = COLOMBIAN_CAPITALS.sort(() => 0.5 - Math.random()).slice(0, numDest);
-
+    
     if (numSources > 4 || numDest > 4) {
-        showError("El número máximo de buses y ciudades es 4.");
+        showError("como máximo 4 buses y 4 ciudades");
+        clearInput('num-sources', 'num-dest');
         return;
     }
+    if (numSources < 1 || numDest < 1) {
+        showError("debe haber al menos 1 bus y 1 ciudad");
+        clearInput('num-sources', 'num-dest');
+        return;
+    }
+
+    const svg = document.getElementById('diagram-svg');
+    svg.innerHTML = '';
+
     // Ajustes clave -------------------------------------------------
     const ELEMENT_SPACING = 200; // Más espacio entre elementos
     const HORIZONTAL_MARGIN = 150; // Margen lateral aumentado
-    const BASE_HEIGHT = 0; // Altura base adicional
+    const BASE_HEIGHT = 100; // Altura base adicional
     
     // Calcular dimensiones dinámicas
     const maxElements = Math.max(numSources, numDest);
@@ -139,20 +163,69 @@ function generateDiagram() {
             const midX = (busPos.x + cityPos.x) / 2;
             const midY = (busPos.y + cityPos.y) / 2;
 
+            // Coordenadas para xij (25% desde el bus)
+            const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
+            const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
+            
+            // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
+            const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
+            const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
+    
+            // Crear etiqueta xij
             const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            xij.setAttribute('x', midX - 30);
-            xij.setAttribute('y', midY);
+            xij.setAttribute('x', xijX);
+            xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
             xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
+            xij.setAttribute('fill', '#2c3e50'); // Color del bus
             svg.appendChild(xij);
-
+    
+            // Crear etiqueta cij
             const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            cij.setAttribute('x', midX + 30);
-            cij.setAttribute('y', midY);
+            cij.setAttribute('x', cijX);
+            cij.setAttribute('y', cijY - 10); // 10px arriba de la línea
             cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
+            cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
             svg.appendChild(cij);
         });
     });
     
+    // busPositions.forEach((busPos, busIdx) => {
+    //     cityPositions.forEach((cityPos, cityIdx) => {
+    //         // Calcular posición relativa
+    //         const lineLength = Math.sqrt(
+    //             Math.pow(cityPos.x - busPos.x, 2) + 
+    //             Math.pow(cityPos.y - busPos.y, 2)
+    //         );
+            
+    //         // Offset para las etiquetas
+    //         const labelOffset = lineLength * 0.15; // 15% de la longitud de la línea
+            
+    //         // Coordenadas para xij (25% desde el bus)
+    //         const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
+    //         const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
+            
+    //         // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
+    //         const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
+    //         const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
+    
+    //         // Crear etiqueta xij
+    //         const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    //         xij.setAttribute('x', xijX);
+    //         xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
+    //         xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
+    //         xij.setAttribute('fill', '#2c3e50'); // Color del bus
+    //         svg.appendChild(xij);
+    
+    //         // Crear etiqueta cij
+    //         const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    //         cij.setAttribute('x', cijX);
+    //         cij.setAttribute('y', cijY + 15); // 15px debajo de la línea
+    //         cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
+    //         cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
+    //         svg.appendChild(cij);
+    //     });
+    // });
+
     // Añadir al final:
     svg.setAttribute('viewBox', `0 0 1024 ${numElements}`);
     
