@@ -1,11 +1,15 @@
-const COLOMBIAN_CAPITALS = [
+const capitals = [
     "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Cúcuta", "Bucaramanga", "Pereira",
     "Manizales", "Ibagué", "Santa Marta", "Villavicencio", "Pasto", "Montería", "Armenia", "Neiva",
     "Sincelejo", "Valledupar", "Quibdó", "Riohacha", "Florencia", "San Andrés", "Mocoa", "Yopal",
     "Popayán", "Tunja", "Leticia", "Arauca", "Inírida", "Puerto Carreño", "Mitú", "San José del Guaviare"
 ];
 
-const BUS_COLORS = ['#0000FF', '#FF0000', '#FFA500', '#006400'];
+const busColors = ['#0000FF', '#FF0000', '#FFA500', '#006400'];
+let busesAndCities = {};
+let functionObj = [];
+let restricOff = [];
+let restricDem = [];
 
 // Alternar posición vertical para evitar superposición
 const verticalOffset = (cityIdx % 2 === 0) ? -15 : 15;
@@ -52,7 +56,7 @@ function generateDiagram() {
     
     const numSources = parseInt(document.getElementById('num-sources').value);
     const numDest = parseInt(document.getElementById('num-dest').value);
-    const cities = COLOMBIAN_CAPITALS.sort(() => 0.5 - Math.random()).slice(0, numDest);
+    const cities = capitals.sort(() => 0.5 - Math.random()).slice(0, numDest);
     
     if (numSources > 4 || numDest > 4) {
         showError("como máximo 4 buses y 4 ciudades");
@@ -69,14 +73,14 @@ function generateDiagram() {
     svg.innerHTML = '';
 
     // Ajustes clave -------------------------------------------------
-    const ELEMENT_SPACING = 250; // Más espacio entre elementos
-    const HORIZONTAL_MARGIN = 150; // Margen lateral aumentado
-    const BASE_HEIGHT = 100; // Altura base adicional
+    const element_spacing = 250; // Más espacio entre elementos
+    const horizontalMargin = 150; // Margen lateral aumentado
+    const baseHeight = 100; // Altura base adicional
     
     // Calcular dimensiones dinámicas
     const maxElements = Math.max(numSources, numDest);
     const diagramWidth = 1200; // Ancho aumentado
-    const diagramHeight = (maxElements * ELEMENT_SPACING) + BASE_HEIGHT;
+    const diagramHeight = (maxElements * element_spacing) + baseHeight;
     
     svg.style.minHeight = `${diagramHeight}px`;
     svg.setAttribute('viewBox', `0 0 ${diagramWidth} ${diagramHeight}`);
@@ -100,13 +104,13 @@ function generateDiagram() {
 
     // Posicionar elementos
     const busPositions = Array.from({length: numSources}, (_, i) => ({
-        x: HORIZONTAL_MARGIN,
-        y: BASE_HEIGHT/2 + i * ELEMENT_SPACING
+        x: horizontalMargin,
+        y: baseHeight/2 + i * element_spacing
     }));
     
     const cityPositions = cities.map((_, i) => ({
-        x: diagramWidth - HORIZONTAL_MARGIN,
-        y: BASE_HEIGHT/2 + i * ELEMENT_SPACING
+        x: diagramWidth - horizontalMargin,
+        y: baseHeight/2 + i * element_spacing
     }));
 
     // Dibujar buses
@@ -146,8 +150,8 @@ function generateDiagram() {
         svg.appendChild(text);
     });
 
-    const LABEL_OFFSET = 40; // Distancia desde la línea
-    const ANGLE_OFFSET = 25; // Ángulo para evitar colisiones
+    const labelOffset = 40; // Distancia desde la línea
+    const angleOffset = 25; // Ángulo para evitar colisiones
 
     // Dibujar conexiones
     busPositions.forEach((busPos, busIdx) => {
@@ -159,7 +163,7 @@ function generateDiagram() {
             line.setAttribute('x2', cityPos.x);
             line.setAttribute('y2', cityPos.y);
             line.setAttribute('class', 'line');
-            line.setAttribute('stroke', BUS_COLORS[busIdx % BUS_COLORS.length]);
+            line.setAttribute('stroke', busColors[busIdx % busColors.length]);
             svg.appendChild(line);
 
             // calcular dirección de la línea
@@ -169,18 +173,20 @@ function generateDiagram() {
 
             // Posicionamiento inteligente de etiquetas
             const xijPosition = {
-                x: busPos.x + dx * 0.25 + Math.cos(angle + ANGLE_OFFSET) * LABEL_OFFSET,
-                y: busPos.y + dy * 0.25 + Math.sin(angle + ANGLE_OFFSET) * LABEL_OFFSET
+                x: busPos.x + dx * 0.25 + Math.cos(angle + angleOffset) * labelOffset,
+                y: busPos.y + dy * 0.25 + Math.sin(angle + angleOffset) * labelOffset
             };
 
             const cijPosition = {
-                x: busPos.x + dx * 0.75 + Math.cos(angle - ANGLE_OFFSET) * LABEL_OFFSET,
-                y: busPos.y + dy * 0.75 + Math.sin(angle - ANGLE_OFFSET) * LABEL_OFFSET
+                x: busPos.x + dx * 0.75 + Math.cos(angle - angleOffset) * labelOffset,
+                y: busPos.y + dy * 0.75 + Math.sin(angle - angleOffset) * labelOffset
             };
 
+            functionObj.push(`${busIdx}${cityIdx} + `);
             // Crear etiquetas con posición calculada
-            createLabel(svg, `x${busIdx+1}${cityIdx+1}`, xijPosition, BUS_COLORS[busIdx % BUS_COLORS.length]);
-            createLabel(svg, `c${busIdx+1}${cityIdx+1}`, cijPosition, BUS_COLORS[busIdx % BUS_COLORS.length]);
+            createLabel(svg, `x${busIdx+1}${cityIdx+1}`, xijPosition, busColors[busIdx % busColors.length]);
+            createLabel(svg, `c${busIdx+1}${cityIdx+1}`, cijPosition, busColors[busIdx % busColors.length]);
+
             // Etiquetas
             // const midX = (busPos.x + cityPos.x) / 2;
             // const midY = (busPos.y + cityPos.y) / 2;
@@ -211,15 +217,15 @@ function generateDiagram() {
         });
     });
     
-function createLabel(svg, text, position, color) {
-    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label.setAttribute('x', position.x);
-    label.setAttribute('y', position.y);
-    label.textContent = text;
-    label.setAttribute('fill', color);
-    label.setAttribute('class', 'diagram-label');
-    svg.appendChild(label);
-}
+    function createLabel(svg, text, position, color) {
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', position.x);
+        label.setAttribute('y', position.y);
+        label.textContent = text;
+        label.setAttribute('fill', color);
+        label.setAttribute('class', 'diagram-label');
+        svg.appendChild(label);
+    }
     // busPositions.forEach((busPos, busIdx) => {
     //     cityPositions.forEach((cityPos, cityIdx) => {
     //         // Calcular posición relativa
@@ -256,8 +262,6 @@ function createLabel(svg, text, position, color) {
     //         svg.appendChild(cij);
     //     });
     // });
-
     // Añadir al final:
     svg.setAttribute('viewBox', `0 0 1024 ${numElements}`);
-    
 }
