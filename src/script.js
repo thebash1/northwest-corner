@@ -69,7 +69,7 @@ function generateDiagram() {
     svg.innerHTML = '';
 
     // Ajustes clave -------------------------------------------------
-    const ELEMENT_SPACING = 200; // Más espacio entre elementos
+    const ELEMENT_SPACING = 250; // Más espacio entre elementos
     const HORIZONTAL_MARGIN = 150; // Margen lateral aumentado
     const BASE_HEIGHT = 100; // Altura base adicional
     
@@ -146,6 +146,9 @@ function generateDiagram() {
         svg.appendChild(text);
     });
 
+    const LABEL_OFFSET = 40; // Distancia desde la línea
+    const ANGLE_OFFSET = 25; // Ángulo para evitar colisiones
+
     // Dibujar conexiones
     busPositions.forEach((busPos, busIdx) => {
         cityPositions.forEach((cityPos, cityIdx) => {
@@ -159,36 +162,64 @@ function generateDiagram() {
             line.setAttribute('stroke', BUS_COLORS[busIdx % BUS_COLORS.length]);
             svg.appendChild(line);
 
-            // Etiquetas
-            const midX = (busPos.x + cityPos.x) / 2;
-            const midY = (busPos.y + cityPos.y) / 2;
+            // calcular dirección de la línea
+            const dx = cityPos.x - busPos.x;
+            const dy = cityPos.y - busPos.y;
+            const angle = Math.atan2(dy, dx);
 
-            // Coordenadas para xij (25% desde el bus)
-            const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
-            const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
+            // Posicionamiento inteligente de etiquetas
+            const xijPosition = {
+                x: busPos.x + dx * 0.25 + Math.cos(angle + ANGLE_OFFSET) * LABEL_OFFSET,
+                y: busPos.y + dy * 0.25 + Math.sin(angle + ANGLE_OFFSET) * LABEL_OFFSET
+            };
+
+            const cijPosition = {
+                x: busPos.x + dx * 0.75 + Math.cos(angle - ANGLE_OFFSET) * LABEL_OFFSET,
+                y: busPos.y + dy * 0.75 + Math.sin(angle - ANGLE_OFFSET) * LABEL_OFFSET
+            };
+
+            // Crear etiquetas con posición calculada
+            createLabel(svg, `x${busIdx+1}${cityIdx+1}`, xijPosition, BUS_COLORS[busIdx % BUS_COLORS.length]);
+            createLabel(svg, `c${busIdx+1}${cityIdx+1}`, cijPosition, BUS_COLORS[busIdx % BUS_COLORS.length]);
+            // Etiquetas
+            // const midX = (busPos.x + cityPos.x) / 2;
+            // const midY = (busPos.y + cityPos.y) / 2;
+
+            // // Coordenadas para xij (25% desde el bus)
+            // const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
+            // const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
             
-            // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
-            const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
-            const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
+            // // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
+            // const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
+            // const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
     
-            // Crear etiqueta xij
-            const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            xij.setAttribute('x', xijX);
-            xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
-            xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
-            xij.setAttribute('fill', '#2c3e50'); // Color del bus
-            svg.appendChild(xij);
+            // // Crear etiqueta xij
+            // const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            // xij.setAttribute('x', xijX);
+            // xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
+            // xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
+            // xij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
+            // svg.appendChild(xij);
     
-            // Crear etiqueta cij
-            const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            cij.setAttribute('x', cijX);
-            cij.setAttribute('y', cijY - 10); // 10px arriba de la línea
-            cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
-            cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
-            svg.appendChild(cij);
+            // // Crear etiqueta cij
+            // const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            // cij.setAttribute('x', cijX);
+            // cij.setAttribute('y', cijY - 10); // 10px arriba de la línea
+            // cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
+            // cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
+            // svg.appendChild(cij);
         });
     });
     
+function createLabel(svg, text, position, color) {
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', position.x);
+    label.setAttribute('y', position.y);
+    label.textContent = text;
+    label.setAttribute('fill', color);
+    label.setAttribute('class', 'diagram-label');
+    svg.appendChild(label);
+}
     // busPositions.forEach((busPos, busIdx) => {
     //     cityPositions.forEach((cityPos, cityIdx) => {
     //         // Calcular posición relativa

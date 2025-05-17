@@ -56,7 +56,15 @@ button:hover {
     min-height: 500px;
     overflow: auto;
     position: relative;
-    padding-top: 20px;
+    /* padding-top: 20px;
+        background: repeating-linear-gradient(
+        45deg,
+        #f8f9fa,
+        #f8f9fa 20px,
+        #e9ecef 20px,
+        #e9ecef 40px
+    ); */
+
 }
 
 #diagram-svg {
@@ -69,6 +77,18 @@ button:hover {
     font-size: 16px;
     font-weight: bold;
     user-select: none;
+}
+
+/* En style.css */
+.diagram-label {
+    font-size: 10px;
+    font-weight: bold;
+    pointer-events: none;
+    text-shadow: 
+        -1px -1px 2px white,
+        1px -1px 2px white,
+        -1px 1px 2px white,
+        1px 1px 2px white; /* Borde blanco para mejor legibilidad */
 }
 
 .bus-icon, .city-icon {
