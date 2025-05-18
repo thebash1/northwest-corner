@@ -59,8 +59,8 @@ button:hover {
 }
 
 #diagram-container {
-    height: 80dvh; /* Usar altura relativa */
-    min-height: 500px;
+    height: 70dvh; /* Usar altura relativa */
+    /* min-height: 500px; */
     overflow: auto;
     position: relative;
     /* padding-top: 20px;
@@ -76,8 +76,8 @@ button:hover {
 
 #diagram-svg {
     width: 100%;
-    height: auto; /* Altura automática según contenido */
-    min-height: 1000px; /* Altura mínima base */
+    height: 0px; /* Altura automática según contenido */
+    /* min-height: 500px; Altura mínima base */
 }
 
 #diagram-svg text {
@@ -120,7 +120,7 @@ button:hover {
 .image-container {
     position: relative;
     width: 100%;
-    height: 600px; /* Altura fija para mejor posicionamiento */
+    height: auto-fit; /* Altura fija para mejor posicionamiento */
 }
 
 .overlay-controls {

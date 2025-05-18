@@ -11,13 +11,8 @@ let functionObj = [];
 let restricOff = [];
 let restricDem = [];
 
-// Alternar posición vertical para evitar superposición
-const verticalOffset = (cityIdx % 2 === 0) ? -15 : 15;
-xij.setAttribute('y', xijY + verticalOffset);
-cij.setAttribute('y', cijY - verticalOffset);
-
 function showError(message) {
-    alert(`Error de Validación:\n${message}`);
+    alert(`Error de validación: ${message}`);
 }
 
 function clearInput(idBus, idCity) {
@@ -73,9 +68,9 @@ function generateDiagram() {
     svg.innerHTML = '';
 
     // Ajustes clave -------------------------------------------------
-    const element_spacing = 250; // Más espacio entre elementos
+    const element_spacing = 300; // Más espacio entre elementos
     const horizontalMargin = 150; // Margen lateral aumentado
-    const baseHeight = 100; // Altura base adicional
+    const baseHeight = 50; // Altura base adicional
     
     // Calcular dimensiones dinámicas
     const maxElements = Math.max(numSources, numDest);
@@ -182,7 +177,11 @@ function generateDiagram() {
                 y: busPos.y + dy * 0.75 + Math.sin(angle - angleOffset) * labelOffset
             };
 
-            functionObj.push(`${busIdx}${cityIdx} + `);
+            // Alternar posición vertical para evitar superposición
+            // const verticalOffset = (cityIdx % 2 === 0) ? - 15 : 15;
+            // xij.setAttribute('y', xijY + verticalOffset);
+            // cij.setAttribute('y', cijY - verticalOffset);
+
             // Crear etiquetas con posición calculada
             createLabel(svg, `x${busIdx+1}${cityIdx+1}`, xijPosition, busColors[busIdx % busColors.length]);
             createLabel(svg, `c${busIdx+1}${cityIdx+1}`, cijPosition, busColors[busIdx % busColors.length]);
@@ -226,6 +225,7 @@ function generateDiagram() {
         label.setAttribute('class', 'diagram-label');
         svg.appendChild(label);
     }
+
     // busPositions.forEach((busPos, busIdx) => {
     //     cityPositions.forEach((cityPos, cityIdx) => {
     //         // Calcular posición relativa
@@ -263,5 +263,6 @@ function generateDiagram() {
     //     });
     // });
     // Añadir al final:
-    svg.setAttribute('viewBox', `0 0 1024 ${numElements}`);
+    //svg.setAttribute('viewBox', `0 0 1024 ${numSources}`);
+
 }
