@@ -189,13 +189,7 @@ function generateDiagram() {
                 y: busPos.y + dy * 0.75 + Math.sin(angle - angleOffset) * labelOffset
             };
 
-            // Alternar posición vertical para evitar superposición
-            // const verticalOffset = (cityIdx % 2 === 0) ? - 15 : 15;
-            // xij.setAttribute('y', xijY + verticalOffset);
-            // cij.setAttribute('y', cijY - verticalOffset);
-
             // Crear etiquetas con posición calculada
-            // Dentro del loop de conexiones (busPositions.forEach...)
             const cityName = cities[cityIdx];
             const xId = `x${busIdx+1}${cityIdx+1}`;
             const cId = `c${busIdx+1}${cityIdx+1}`;
@@ -204,37 +198,13 @@ function generateDiagram() {
             createLabel(svg, `${xId}`, xijPosition, busColors[busIdx % busColors.length]);
             createLabel(svg, `${cId}`, cijPosition, busColors[busIdx % busColors.length]);
 
-            // Actualizar la estructura de datos
-            updateRouteValues(busIdx, cityIdx, 0, 0, cityName);
-            updateRouteValues(busIdx, cityIdx, 0, 0, cities[cityIdx]);
-
-            // Etiquetas
-            // const midX = (busPos.x + cityPos.x) / 2;
-            // const midY = (busPos.y + cityPos.y) / 2;
-
-            // // Coordenadas para xij (25% desde el bus)
-            // const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
-            // const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
+            // Inicializar valores para esta ruta
+            // Valores de prueba (normalmente estos valores los ingresaría el usuario)
+            const randomX = Math.floor(Math.random() * 10) + 1; // Valor aleatorio entre 1-10
+            const randomC = Math.floor(Math.random() * 100) + 20; // Costo aleatorio entre 20-120
             
-            // // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
-            // const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
-            // const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
-    
-            // // Crear etiqueta xij
-            // const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            // xij.setAttribute('x', xijX);
-            // xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
-            // xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
-            // xij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
-            // svg.appendChild(xij);
-    
-            // // Crear etiqueta cij
-            // const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            // cij.setAttribute('x', cijX);
-            // cij.setAttribute('y', cijY - 10); // 10px arriba de la línea
-            // cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
-            // cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
-            // svg.appendChild(cij);
+            // Actualizar la estructura de datos con valores aleatorios iniciales para demo
+            updateRouteValues(busIdx, cityIdx, randomX, randomC, cityName);
         });
     });
     
@@ -247,65 +217,80 @@ function generateDiagram() {
         label.setAttribute('class', 'diagram-label');
         svg.appendChild(label);
     }
-
-    // busPositions.forEach((busPos, busIdx) => {
-    //     cityPositions.forEach((cityPos, cityIdx) => {
-    //         // Calcular posición relativa
-    //         const lineLength = Math.sqrt(
-    //             Math.pow(cityPos.x - busPos.x, 2) + 
-    //             Math.pow(cityPos.y - busPos.y, 2)
-    //         );
-            
-    //         // Offset para las etiquetas
-    //         const labelOffset = lineLength * 0.15; // 15% de la longitud de la línea
-            
-    //         // Coordenadas para xij (25% desde el bus)
-    //         const xijX = busPos.x + (cityPos.x - busPos.x) * 0.25;
-    //         const xijY = busPos.y + (cityPos.y - busPos.y) * 0.25;
-            
-    //         // Coordenadas para cij (75% desde el bus = 25% desde la ciudad)
-    //         const cijX = busPos.x + (cityPos.x - busPos.x) * 0.75;
-    //         const cijY = busPos.y + (cityPos.y - busPos.y) * 0.75;
-    
-    //         // Crear etiqueta xij
-    //         const xij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    //         xij.setAttribute('x', xijX);
-    //         xij.setAttribute('y', xijY - 10); // 10px arriba de la línea
-    //         xij.textContent = `x${busIdx + 1}${cityIdx + 1}`;
-    //         xij.setAttribute('fill', '#2c3e50'); // Color del bus
-    //         svg.appendChild(xij);
-    
-    //         // Crear etiqueta cij
-    //         const cij = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    //         cij.setAttribute('x', cijX);
-    //         cij.setAttribute('y', cijY + 15); // 15px debajo de la línea
-    //         cij.textContent = `c${busIdx + 1}${cityIdx + 1}`;
-    //         cij.setAttribute('fill', '#2c3e50'); // Color oscuro para contraste
-    //         svg.appendChild(cij);
-    //     });
-    // });
-    // Añadir al final:
-    //svg.setAttribute('viewBox', `0 0 1024 ${numSources}`);
-
 }
 
-function showObjectiveFunction() {
+// Función mejorada para mostrar la función objetivo en un modal
+function showObjetiveFunction() {
     let objective = "";
+    let objectiveLatex = "Z = ";
     let total = 0;
     
-    Object.keys(busesAndCities).forEach(bus => {
-        busesAndCities[bus].forEach((ruta, index) => {
-            const termino = `${ruta.x}*${ruta.c}`;
-            objective += termino;
-            total += (parseInt(ruta.x) || 0) * (parseInt(ruta.c) || 0);
+    const busKeys = Object.keys(busesAndCities);
+    
+    busKeys.forEach((bus, busIndex) => {
+        const routes = busesAndCities[bus];
+        
+        routes.forEach((ruta, routeIndex) => {
+            // Obtener los valores de x y c
+            const xValue = parseInt(ruta.x) || 0;
+            const cValue = parseInt(ruta.c) || 0;
+            const xName = `x${busIndex + 1}${routeIndex + 1}`;
+            const cName = `c${busIndex + 1}${routeIndex + 1}`;
             
-            if (!(bus === Object.keys(busesAndCities).pop() && index === busesAndCities[bus].length - 1)) {
+            // Calcular el producto para esta ruta
+            const producto = xValue * cValue;
+            total += producto;
+            
+            // Formato para la ecuación matemática
+            const termino = `${xName} × ${cName}`;
+            const terminoConValores = `${xValue} × ${cValue}`;
+            
+            // Añadir el término a la ecuación
+            objective += `${termino} = ${terminoConValores} = ${producto}`;
+            
+            // Formato para LaTeX (mostrado en rojo)
+            objectiveLatex += `${xName} · ${cName}`;
+            
+            // Añadir "+" si no es el último término
+            const isLastTerm = (busIndex === busKeys.length - 1) && 
+                              (routeIndex === routes.length - 1);
+            
+            if (!isLastTerm) {
                 objective += " + ";
+                objectiveLatex += " + ";
             }
         });
     });
-
-    alert(`Función objetivo:\nZ = ${objective}\n\nValor total: ${total}`);
+    
+    // Abrir el modal con la información
+    const modalBody = document.getElementById('objective-modal-body');
+    const modalTitle = document.getElementById('objective-modal-title');
+    
+    modalTitle.innerHTML = "Función Objetivo del Modelo de Transporte";
+    
+    // Construir contenido con formato
+    let modalContent = `
+        <div class="text-center mb-4">
+            <h4 class="text-danger">${objectiveLatex}</h4>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <p><strong>Cálculo paso a paso:</strong></p>
+                <p>${objective}</p>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <h5>Valor total de la función objetivo: <span class="badge bg-success">${total}</span></h5>
+            </div>
+        </div>
+    `;
+    
+    modalBody.innerHTML = modalContent;
+    
+    // Abrir el modal usando Bootstrap
+    const objectiveModal = new bootstrap.Modal(document.getElementById('objective-modal'));
+    objectiveModal.show();
 }
 
 function showNorthWestCorner() {
