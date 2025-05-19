@@ -7,6 +7,7 @@ const capitals = [
 
 const busColors = ['#0000FF', '#FF0000', '#FFA500', '#006400'];
 let busesAndCities = {};
+let currentCities = [];
 let functionObj = [];
 let restricOff = [];
 let restricDem = [];
@@ -64,7 +65,8 @@ function generateDiagram() {
     const numSources = parseInt(document.getElementById('num-sources').value);
     const numDest = parseInt(document.getElementById('num-dest').value);
     const cities = capitals.sort(() => 0.5 - Math.random()).slice(0, numDest);
-    
+    currentCities = cities;
+
     if (numSources > 4 || numDest > 4) {
         showError("como máximo 4 buses y 4 ciudades");
         clearInput('num-sources', 'num-dest');
@@ -221,7 +223,7 @@ function generateDiagram() {
 
 // Función mejorada para mostrar la función objetivo en un modal
 function showObjetiveFunction() {
-    let objective = "";
+    let objective = "Z = ";
     let objectiveLatex = "Z = ";
     let total = 0;
     
@@ -246,10 +248,10 @@ function showObjetiveFunction() {
             const terminoConValores = `${xValue} × ${cValue}`;
             
             // Añadir el término a la ecuación
-            objective += `${termino} = ${terminoConValores} = ${producto}`;
+            objective += `${termino}`;
             
             // Formato para LaTeX (mostrado en rojo)
-            objectiveLatex += `${xName} · ${cName}`;
+            objectiveLatex += `${xName} * ${cName}`;
             
             // Añadir "+" si no es el último término
             const isLastTerm = (busIndex === busKeys.length - 1) && 
@@ -266,23 +268,13 @@ function showObjetiveFunction() {
     const modalBody = document.getElementById('objective-modal-body');
     const modalTitle = document.getElementById('objective-modal-title');
     
-    modalTitle.innerHTML = "Función Objetivo del Modelo de Transporte";
+    // Título mejorado con formato
+    modalTitle.innerHTML = "Función Objetivo";
     
     // Construir contenido con formato
     let modalContent = `
         <div class="text-center mb-4">
-            <h4 class="text-danger">${objectiveLatex}</h4>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <p><strong>Cálculo paso a paso:</strong></p>
-                <p>${objective}</p>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-12">
-                <h5>Valor total de la función objetivo: <span class="badge bg-success">${total}</span></h5>
-            </div>
+            <p class="text">${objectiveLatex}</p>
         </div>
     `;
     
@@ -321,4 +313,34 @@ function updateRouteValues(busIndex, cityIndex, xValue, cValue, cityName) {
         c: cValue,
         ciudad: cityName
     };
+}
+
+function showConstraints() {
+    // --- Restricciones de oferta ---
+    let supplyHtml = '<h6 class="text-primary mb-3">Restricciones de oferta</h6><ul>';
+    Object.keys(busesAndCities).forEach((busKey, i) => {
+        // x_{i+1,1} + x_{i+1,2} + ... <= busKey
+        const terms = currentCities
+            .map((_, j) => `x${i+1}${j+1}`)
+            .join(' + ');
+        supplyHtml += `<li>${terms} ≤ ${busKey}</li>`;
+    });
+    supplyHtml += '</ul>';
+
+    // --- Restricciones de demanda ---
+    let demandHtml = '<h6 class="text-success mt-4 mb-3">Restricciones de demanda</h6><ul>';
+    currentCities.forEach((city, j) => {
+        // c_{1,j+1} + c_{2,j+1} + ... ≤ city
+        const terms = Object.keys(busesAndCities)
+            .map((_, i) => `c${i+1}${j+1}`)
+            .join(' + ');
+        demandHtml += `<li>${terms} ≤ ${city}</li>`;
+    });
+    demandHtml += '</ul>';
+
+    // Inserta el HTML completo en el modal y lo muestra
+    const body = document.getElementById('constraints-modal-body');
+    body.innerHTML = supplyHtml + demandHtml;
+    const modal = new bootstrap.Modal(document.getElementById('constraints-modal'));
+    modal.show();
 }

@@ -41,7 +41,7 @@
             </label>
             <button onclick="generateDiagram()">Generar Diagrama</button>
             <button onclick="showObjetiveFunction()">Función objetivo</button>
-            <button onclick="alert('botón restricciones')">Restricciones oferta y demanda</button>
+            <button onclick="showConstraints()">Restricciones oferta y demanda</button>
             <a href="./noroeste.html"><button>Esquina noroeste</button></a>
         </div>
         <div id="diagram-container">
@@ -61,11 +61,30 @@
                     <!-- Contenido dinámico se insertará aquí -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal para restricciones de oferta y demanda -->
+    <div class="modal fade" id="constraints-modal" tabindex="-1" aria-labelledby="constraints-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="constraints-modal-title">Restricciones de oferta y demanda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="constraints-modal-body">
+                    <!-- Aquí se insertarán dinámicamente las restricciones -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./script.js"></script>
