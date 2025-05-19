@@ -39,8 +39,9 @@
                 <input type="number" id="num-dest" min="1" max="4" value="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
             </label>
             <button onclick="generateDiagram()">Generar Diagrama</button>
-            <button id="modalFunctObj">Función objetivo</button>
-            <button onclick="alert('botón restricciones')">Restricciones</button>
+            <button onclick="showObjetiveFunction()">Función objetivo</button>
+            <button onclick="alert('botón restricciones')">Restricciones oferta y demanda</button>
+            <button onclick="showNorthWestCorner()">Esquina noroeste</button>
         </div>
         <div id="diagram-container">
             <svg id="diagram-svg" width="100%" height="100%"></svg>
@@ -63,7 +64,7 @@
     </div> -->
     <!-- #endregion modal-->
 
-    
+
     <script src="./script.js"></script>
 </body>
 </html>

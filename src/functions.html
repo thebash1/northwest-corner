@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            min-width: 80px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .diagonal-cell {
+            position: relative;
+            height: 60px;
+        }
+        
+        .diagonal-cell::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border-bottom: 2px solid #000;
+            transform: skewY(-45deg) translateY(-50%);
+        }
+        
+        .cell-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .top-value {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
+        
+        .bottom-value {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        .empty-cell {
+            background-color: #f8f8f8;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <th>Ciudad1</th>
+                <th>Ciudad2</th>
+                <th>Ciudad3</th>
+                <th>Ciudad4</th>
+                <th>Oferta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Bus1 -->
+            <tr>
+                <td>Bus1</td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">35</div>
+                        <div class="bottom-value">8</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">X</div>
+                        <div class="bottom-value">15</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">X</div>
+                        <div class="bottom-value">10</div>
+                    </div>
+                </td>
+                <td>0</td>
+                <td>35</td>
+            </tr>
+            
+            <!-- Bus2 -->
+            <tr>
+                <td>Bus2</td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">10</div>
+                        <div class="bottom-value">10</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">20</div>
+                        <div class="bottom-value">12</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">20</div>
+                        <div class="bottom-value">14</div>
+                    </div>
+                </td>
+                <td>0</td>
+                <td>50</td>
+            </tr>
+            
+            <!-- Bus3 -->
+            <tr>
+                <td>Bus3</td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">X</div>
+                        <div class="bottom-value">14</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">X</div>
+                        <div class="bottom-value">9</div>
+                    </div>
+                </td>
+                <td class="diagonal-cell">
+                    <div class="cell-content">
+                        <div class="top-value">10</div>
+                        <div class="bottom-value">15</div>
+                    </div>
+                </td>
+                <td>30</td>
+                <td>40</td>
+            </tr>
+            
+            <!-- Demandas -->
+            <tr>
+                <td>Demandas</td>
+                <td>45</td>
+                <td>20</td>
+                <td>30</td>
+                <td>30</td>
+                <td>125</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

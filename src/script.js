@@ -20,6 +20,18 @@ function clearInput(idBus, idCity) {
     document.getElementById(idCity).value = '1';
 }
 
+// Función esquina noroeste CORREGIDA
+function showNorthWestCorner() {
+    let info = "Rutas:\n\n";
+    Object.keys(busesAndCities).forEach(bus => {
+        info += `${bus}:\n`;
+        busesAndCities[bus].forEach((ruta, idx) => {
+            info += `${ruta.ciudad}: x=${ruta.x}, c=${ruta.c}\n`;
+        });
+    });
+    alert(info);
+}
+
 function startProgram() {
     const numBuses = parseInt(document.getElementById('num-buses').value);
     const numCities = parseInt(document.getElementById('num-cities').value);
@@ -183,8 +195,18 @@ function generateDiagram() {
             // cij.setAttribute('y', cijY - verticalOffset);
 
             // Crear etiquetas con posición calculada
-            createLabel(svg, `x${busIdx+1}${cityIdx+1}`, xijPosition, busColors[busIdx % busColors.length]);
-            createLabel(svg, `c${busIdx+1}${cityIdx+1}`, cijPosition, busColors[busIdx % busColors.length]);
+            // Dentro del loop de conexiones (busPositions.forEach...)
+            const cityName = cities[cityIdx];
+            const xId = `x${busIdx+1}${cityIdx+1}`;
+            const cId = `c${busIdx+1}${cityIdx+1}`;
+
+            // Modificar las llamadas a createLabel para incluir los valores iniciales
+            createLabel(svg, `${xId}`, xijPosition, busColors[busIdx % busColors.length]);
+            createLabel(svg, `${cId}`, cijPosition, busColors[busIdx % busColors.length]);
+
+            // Actualizar la estructura de datos
+            updateRouteValues(busIdx, cityIdx, 0, 0, cityName);
+            updateRouteValues(busIdx, cityIdx, 0, 0, cities[cityIdx]);
 
             // Etiquetas
             // const midX = (busPos.x + cityPos.x) / 2;
@@ -265,4 +287,53 @@ function generateDiagram() {
     // Añadir al final:
     //svg.setAttribute('viewBox', `0 0 1024 ${numSources}`);
 
+}
+
+function showObjectiveFunction() {
+    let objective = "";
+    let total = 0;
+    
+    Object.keys(busesAndCities).forEach(bus => {
+        busesAndCities[bus].forEach((ruta, index) => {
+            const termino = `${ruta.x}*${ruta.c}`;
+            objective += termino;
+            total += (parseInt(ruta.x) || 0) * (parseInt(ruta.c) || 0);
+            
+            if (!(bus === Object.keys(busesAndCities).pop() && index === busesAndCities[bus].length - 1)) {
+                objective += " + ";
+            }
+        });
+    });
+
+    alert(`Función objetivo:\nZ = ${objective}\n\nValor total: ${total}`);
+}
+
+function showNorthWestCorner() {
+    let mensaje = "Datos de rutas:\n\n";
+    
+    Object.keys(busesAndCities).forEach(bus => {
+        mensaje += `${bus}:\n`;
+        busesAndCities[bus].forEach((ruta, index) => {
+            mensaje += `  Ruta ${index + 1}: ${ruta.ciudad}\n`;
+            mensaje += `    x: ${ruta.x}, c: ${ruta.c}\n`;
+        });
+        mensaje += "\n";
+    });
+    
+    alert(mensaje);
+}
+
+// Función para actualizar los valores de las variables
+function updateRouteValues(busIndex, cityIndex, xValue, cValue, cityName) {
+    const busKey = `bus${busIndex + 1}`;
+    
+    if (!busesAndCities[busKey]) {
+        busesAndCities[busKey] = [];
+    }
+    
+    busesAndCities[busKey][cityIndex] = {
+        x: xValue,
+        c: cValue,
+        ciudad: cityName
+    };
 }
