@@ -4,14 +4,14 @@ En español (esquina noroeste), es un método matemático para dar soluciones a 
 
 ## estructura  
 
-```  
-|--- src/
-    |--- index.html  
-    |--- style.css  
-    |--- script.js  
-    |--- img/  
-        |--- bus.png  
-        |--- cityscape.png  
-        |--- open-box.png  
-        |--- template.png  
-```  
+ 
+>|--- src/
+>    |--- index.html  
+>    |--- style.css  
+>    |--- script.js  
+>    |--- img/  
+>        |--- bus.png  
+>        |--- cityscape.png  
+>        |--- open-box.png  
+>        |--- template.png  
+
