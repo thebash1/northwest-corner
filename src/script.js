@@ -251,7 +251,7 @@ function showObjetiveFunction() {
             objective += `${termino}`;
             
             // Formato para LaTeX (mostrado en rojo)
-            objectiveLatex += `${xName} * ${cName}`;
+            objectiveLatex += `(${xName} * ${cName})`;
             
             // Añadir "+" si no es el último término
             const isLastTerm = (busIndex === busKeys.length - 1) && 
@@ -317,7 +317,7 @@ function updateRouteValues(busIndex, cityIndex, xValue, cValue, cityName) {
 
 function showConstraints() {
     // --- Restricciones de oferta ---
-    let supplyHtml = '<h6 class="text-primary mb-3">Restricciones de oferta</h6><ul>';
+    let supplyHtml = '<h6 class="text-primary fw-bold mb-3">Restricciones de oferta</h6><ul>';
     Object.keys(busesAndCities).forEach((busKey, i) => {
         // x_{i+1,1} + x_{i+1,2} + ... <= busKey
         const terms = currentCities
@@ -328,13 +328,13 @@ function showConstraints() {
     supplyHtml += '</ul>';
 
     // --- Restricciones de demanda ---
-    let demandHtml = '<h6 class="text-success mt-4 mb-3">Restricciones de demanda</h6><ul>';
+    let demandHtml = '<h6 class="text-success fw-bold mt-4 mb-3">Restricciones de demanda</h6><ul>';
     currentCities.forEach((city, j) => {
         // c_{1,j+1} + c_{2,j+1} + ... ≤ city
         const terms = Object.keys(busesAndCities)
             .map((_, i) => `c${i+1}${j+1}`)
             .join(' + ');
-        demandHtml += `<li>${terms} ≤ ${city}</li>`;
+        demandHtml += `<li>${terms} = ${city}</li>`;
     });
     demandHtml += '</ul>';
 

@@ -228,3 +228,8 @@ button:hover {
     border-radius: 5px;
     font-weight: 500;
 }
+
+ul {
+    list-style: none;
+    padding: 0;
+}
