@@ -53,7 +53,11 @@ function startProgram() {
     document.getElementById('num-sources').value = numBuses;
     document.getElementById('num-dest').value = numCities;
     generateDiagram();
+    
+    // Guardar los datos después de generar el diagrama
+    saveDiagramData();
 }
+
 
 function goBack() {
     document.getElementById('diagram-window').classList.add('hidden');
@@ -219,6 +223,13 @@ function generateDiagram() {
         label.setAttribute('class', 'diagram-label');
         svg.appendChild(label);
     }
+
+    try {
+        saveDiagramData();
+    } catch (error) {
+        console.error('Error al guardar el diagrama:', error);
+        showError('Error al guardar los datos del diagrama');
+    }
 }
 
 // Función mejorada para mostrar la función objetivo en un modal
@@ -269,7 +280,7 @@ function showObjetiveFunction() {
     const modalTitle = document.getElementById('objective-modal-title');
     
     // Título mejorado con formato
-    modalTitle.innerHTML = "Función Objetivo";
+    modalTitle.innerHTML = "Función Objetivo (minimizar costos)";
     
     // Construir contenido con formato
     let modalContent = `
@@ -343,4 +354,91 @@ function showConstraints() {
     body.innerHTML = supplyHtml + demandHtml;
     const modal = new bootstrap.Modal(document.getElementById('constraints-modal'));
     modal.show();
+}
+
+function getDiagramData() {
+    const data = {
+        buses: {},
+        cities: currentCities,
+        timestamp: new Date().toISOString()
+    };
+
+    // Obtener datos de buses y sus conexiones
+    Object.keys(busesAndCities).forEach(busKey => {
+        data.buses[busKey] = busesAndCities[busKey].map(route => ({
+            cityName: route.ciudad,
+            passengers: route.x,
+            cost: route.c
+        }));
+    });
+
+    return data;
+}
+
+function saveDiagramData() {
+    try {
+        const data = getDiagramData();
+        localStorage.setItem('diagramData', JSON.stringify(data));
+        console.log('Datos guardados exitosamente:', data);
+        return data;
+    } catch (error) {
+        console.error('Error al guardar los datos:', error);
+        showError('Error al guardar los datos del diagrama');
+    }
+}
+
+function goToNorthwest() {
+    if (Object.keys(busesAndCities).length === 0) {
+        showError('Primero debe generar un diagrama');
+        return;
+    }
+
+    try {
+        // Guardar los datos antes de navegar
+        saveDiagramData();
+        // Navegar a la página northwest
+        window.location.href = 'northwest.html';
+    } catch (error) {
+        console.error('Error al navegar:', error);
+        showError('Error al procesar los datos');
+    }
+}
+
+function handleError(error, message) {
+    console.error(error);
+    showError(message || 'Ha ocurrido un error');
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insertar al principio del contenedor principal
+    const container = document.querySelector('.container') || document.body;
+    container.insertBefore(errorDiv, container.firstChild);
+    
+    // Remover después de 5 segundos
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+function loadDiagramData() {
+    const savedData = localStorage.getItem('diagramData');
+    if (!savedData) {
+        showError('No hay datos del diagrama disponibles');
+        return null;
+    }
+
+    try {
+        return JSON.parse(savedData);
+    } catch (error) {
+        console.error('Error al cargar los datos:', error);
+        showError('Error al cargar los datos del diagrama');
+        return null;
+    }
 }

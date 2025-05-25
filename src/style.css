@@ -233,3 +233,39 @@ ul {
     list-style: none;
     padding: 0;
 }
+
+.matrix-input {
+    width: 80px;
+    text-align: center;
+}
+
+.offer-input, .demand-input {
+    width: 80px;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
