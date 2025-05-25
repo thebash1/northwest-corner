@@ -224,10 +224,25 @@ function generateDiagram() {
         svg.appendChild(label);
     }
 
+    console.log('Datos antes de guardar:', busesAndCities, currentCities); // Para debug
+
+    if (Object.keys(busesAndCities).length === 0) {
+        showError('No hay datos para guardar');
+        return;
+    }
+
+    // Guardar los datos
+    const dataToSave = {
+        buses: busesAndCities,
+        cities: currentCities,
+        timestamp: new Date().toISOString()
+    };
+
     try {
-        saveDiagramData();
+        localStorage.setItem('diagramData', JSON.stringify(dataToSave));
+        console.log('Datos guardados:', dataToSave); // Para debug
     } catch (error) {
-        console.error('Error al guardar el diagrama:', error);
+        console.error('Error al guardar datos:', error);
         showError('Error al guardar los datos del diagrama');
     }
 }
@@ -388,19 +403,22 @@ function saveDiagramData() {
 }
 
 function goToNorthwest() {
-    if (Object.keys(busesAndCities).length === 0) {
-        showError('Primero debe generar un diagrama');
+    const savedData = localStorage.getItem('diagramData');
+    if (!savedData) {
+        showError('No hay datos del diagrama para procesar');
         return;
     }
 
     try {
-        // Guardar los datos antes de navegar
-        saveDiagramData();
-        // Navegar a la página northwest
+        const parsedData = JSON.parse(savedData);
+        if (!parsedData.buses || !parsedData.cities) {
+            showError('Los datos del diagrama están incompletos');
+            return;
+        }
         window.location.href = 'northwest.html';
     } catch (error) {
-        console.error('Error al navegar:', error);
-        showError('Error al procesar los datos');
+        console.error('Error al procesar datos:', error);
+        showError('Error al procesar los datos del diagrama');
     }
 }
 
