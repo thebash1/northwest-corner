@@ -187,30 +187,51 @@ function generateInputMatrix() {
 
     // Filas para cada bus
     Object.entries(diagramData.buses).forEach(([busKey, routes]) => {
-        html += `<tr><th>Bus ${busKey.replace('bus', '')}</th>`;
+        html += `<tr><th class="align-middle">Bus ${busKey.replace('bus', '')}</th>`;
         
         // Celdas para cada ciudad
         diagramData.cities.forEach(city => {
             const route = routes.find(r => r.cityName === city);
-            const value = route ? route.passengers : 0;
+            const passengers = route ? route.passengers : 0;
+            const cost = route ? route.c : 0;
             html += `
-                <td>
-                    <input type="number" 
-                           class="form-control form-control-sm text-center matrix-input" 
-                           id="input_${busKey}_${city}"
-                           value="${value}"
-                           min="0"
-                           onkeydown="return validateNumberInput(event)"
-                           onpaste="return validatePaste(event)"
-                           oninput="validateValue(this)">
+                <td class="p-2">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="input-group input-group-sm w-75 mx-auto">
+                            <input type="number" 
+                                   class="form-control form-control-sm text-center matrix-input passengers-input" 
+                                   id="passengers_${busKey}_${city}"
+                                   value="${passengers}"
+                                   min="0"
+                                   data-bus="${busKey}"
+                                   data-city="${city}"
+                                   onkeydown="return validateNumberInput(event)"
+                                   onpaste="return validatePaste(event)"
+                                   oninput="validateValue(this)"
+                                   title="Pasajeros">
+                        </div>
+                        <div class="input-group input-group-sm w-75 mx-auto">
+                            <input type="number" 
+                                   class="form-control form-control-sm text-center matrix-input cost-input" 
+                                   id="cost_${busKey}_${city}"
+                                   value="${cost}"
+                                   min="0"
+                                   data-bus="${busKey}"
+                                   data-city="${city}"
+                                   onkeydown="return validateNumberInput(event)"
+                                   onpaste="return validatePaste(event)"
+                                   oninput="validateValue(this)"
+                                   title="Costo">
+                        </div>
+                    </div>
                 </td>`;
         });
 
         // Celda de oferta
         html += `
-            <td>
+            <td class="align-middle">
                 <input type="number" 
-                       class="form-control form-control-sm text-center offer-input" 
+                       class="form-control form-control-sm text-center w-75 mx-auto offer-input" 
                        id="offer_${busKey}"
                        value="0"
                        min="0"
@@ -242,6 +263,59 @@ function generateInputMatrix() {
     
     matrixContainer.innerHTML = html;
     
+    const style = document.createElement('style');
+    style.textContent = `
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+        
+        .matrix-input, .offer-input, .demand-input {
+            max-width: 80px;
+            margin: 0 auto;
+        }
+        
+        .table td {
+            padding: 0.5rem !important;
+        }
+        
+        .d-flex.flex-column {
+            min-height: 85px;
+            justify-content: space-around;
+        }
+        
+        input[type="number"] {
+            height: 35px;
+        }
+
+        .passengers-input {
+            border-bottom: 2px solid #007bff;
+        }
+
+        .cost-input {
+            border-bottom: 2px solid #28a745;
+        }
+
+        /* Agregar tooltips para identificar los campos */
+        .input-group {
+            position: relative;
+        }
+
+        .input-group input:hover::after {
+            content: attr(title);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+    `;
+    document.head.appendChild(style);
+
     addSumValidationListeners();
     createSumValidationContainer();
     validateSums(); // Validación inicial

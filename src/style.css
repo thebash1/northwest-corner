@@ -253,6 +253,25 @@ ul {
     overflow-x: auto;
 }
 
+/* Estilos adicionales para la matriz */
+.table-matrix input {
+    transition: all 0.2s ease;
+}
+
+.table-matrix input:focus {
+    transform: scale(1.05);
+    box-shadow: 0 0 5px rgba(0,123,255,0.5);
+}
+
+.table-matrix thead th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.table-matrix .matrix-input:nth-child(2) {
+    margin-top: 5px;
+}
+
 .alert {
     position: fixed;
     top: 20px;
@@ -268,4 +287,16 @@ ul {
     background-color: #f8d7da;
     border-color: #f5c6cb;
     color: #721c24;
+}
+
+/* Mejorar la visualización en móviles */
+@media (max-width: 768px) {
+    .table-matrix input {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    .table-matrix td {
+        padding: 0.25rem !important;
+    }
 }
