@@ -612,3 +612,96 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Función para generar la tabla inicial
+function generateTable(rows, cols) {
+    const table = document.createElement('table');
+    table.className = 'table table-bordered';
+    table.id = 'data-matrix';
+    
+    // Crear encabezado de la tabla
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Celda vacía en la esquina superior izquierda
+    headerRow.appendChild(document.createElement('th'));
+    
+    // Encabezados de demanda (D1, D2, etc.)
+    for (let j = 1; j <= cols; j++) {
+        const th = document.createElement('th');
+        th.textContent = `D${j}`;
+        headerRow.appendChild(th);
+    }
+    
+    // Columna para la oferta
+    const ofertaTh = document.createElement('th');
+    ofertaTh.textContent = 'Oferta';
+    headerRow.appendChild(ofertaTh);
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Crear cuerpo de la tabla
+    const tbody = document.createElement('tbody');
+    for (let i = 1; i <= rows; i++) {
+        const tr = document.createElement('tr');
+        
+        // Encabezado de fila (O1, O2, etc.)
+        const th = document.createElement('th');
+        th.textContent = `O${i}`;
+        tr.appendChild(th);
+        
+        // Celdas de costos
+        for (let j = 1; j <= cols; j++) {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'form-control cost-input';
+            input.min = '0';
+            td.appendChild(input);
+            tr.appendChild(td);
+        }
+        
+        // Celda de oferta
+        const ofertaTd = document.createElement('td');
+        const ofertaInput = document.createElement('input');
+        ofertaInput.type = 'number';
+        ofertaInput.className = 'form-control offer-input';
+        ofertaInput.min = '0';
+        ofertaTd.appendChild(ofertaInput);
+        tr.appendChild(ofertaTd);
+        
+        tbody.appendChild(tr);
+    }
+    
+    // Fila de demanda
+    const demandRow = document.createElement('tr');
+    demandRow.innerHTML = `<th>Demanda</th>`;
+    
+    for (let j = 1; j <= cols; j++) {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'form-control demand-input';
+        input.min = '0';
+        td.appendChild(input);
+        demandRow.appendChild(td);
+    }
+    
+    // Celda vacía en la esquina inferior derecha
+    demandRow.appendChild(document.createElement('td'));
+    tbody.appendChild(demandRow);
+    table.appendChild(tbody);
+    
+    // Insertar la tabla en el contenedor
+    const container = document.getElementById('table-container');
+    if (container) {
+        container.innerHTML = '';
+        container.appendChild(table);
+    }
+    
+    // Añadir los listeners de validación después de crear la tabla
+    addSumValidationListeners();
+}
+
+// El resto del código permanece igual...
