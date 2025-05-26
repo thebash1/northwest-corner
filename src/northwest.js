@@ -166,6 +166,8 @@ function calcularEsquinaNoroeste() {
 
     // Mostrar resultados
     displayResults(solution, costs, offers, demands);
+    createDiagramFromSolution(solution, costs);
+
 }
 
 // Función para mostrar errores
@@ -185,68 +187,127 @@ function generateInputMatrix() {
     const matrixContainer = document.getElementById('data-matrix');
     if (!matrixContainer) return showError('No se encontró el contenedor de la matriz');
 
-    let html = '<div class="table-responsive"><table class="table table-bordered align-middle">';
-    // Encabezado
-    html += '<thead><tr><th></th>';
-    diagramData.cities.forEach(city => { html += `<th class="text-center">${city}</th>`; });
-    html += '<th style="background:#c8fac8;">Oferta</th></tr></thead><tbody>';
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="bg-light"></th>
+                        ${diagramData.cities.map(city => 
+                            `<th class="text-center bg-light">${city}</th>`
+                        ).join('')}
+                        <th class="text-center" style="background-color: #e6f3ff;">Oferta</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
 
     // Filas de buses
     Object.entries(diagramData.buses).forEach(([busKey, routes]) => {
-        html += `<tr><th>Bus ${busKey.replace('bus','')}</th>`;
+        html += `
+            <tr>
+                <th class="bg-light">Bus ${busKey.replace('bus','')}</th>`;
+                
         diagramData.cities.forEach(city => {
             const route = routes.find(r => r.ciudad === city);
             const passengers = route ? route.x : 0;
             const cost = route ? route.c : 0;
             html += `
-                <td>
-                    <input type="number" class="form-control form-control-sm text-center passengers-input matrix-input" 
-                        id="passengers_${busKey}_${city}" value="${passengers}" min="0" data-bus="${busKey}" data-city="${city}" 
-                        oninput="validateValue(this)">
-                    <input type="number" class="form-control form-control-sm text-center cost-input matrix-input mt-1" 
-                        id="cost_${busKey}_${city}" value="${cost}" min="0" data-bus="${busKey}" data-city="${city}"
-                        oninput="validateValue(this)">
+                <td class="position-relative" style="min-width: 100px; height: 80px;">
+                    <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <input type="number" 
+                            class="form-control form-control-sm text-center passengers-input matrix-input mb-1" 
+                            id="passengers_${busKey}_${city}" 
+                            value="${passengers}" 
+                            min="0" 
+                            data-bus="${busKey}" 
+                            data-city="${city}" 
+                            oninput="validateValue(this)">
+                        <input type="number" 
+                            class="form-control form-control-sm text-center cost-input matrix-input" 
+                            id="cost_${busKey}_${city}" 
+                            value="${cost}" 
+                            min="0" 
+                            data-bus="${busKey}" 
+                            data-city="${city}"
+                            oninput="validateValue(this)">
+                    </div>
                 </td>`;
         });
+
         const oferta = routes[0] && routes[0].oferta !== undefined ? routes[0].oferta : 0;
-        html += `<td style="background:#c8fac8;">
-            <input type="number" class="form-control form-control-sm text-center offer-input" 
-                id="offer_${busKey}" value="${oferta}" min="0" oninput="validateValue(this)">
-            </td></tr>`;
+        html += `
+            <td style="background-color: #e6f3ff;">
+                <input type="number" 
+                    class="form-control form-control-sm text-center offer-input" 
+                    id="offer_${busKey}" 
+                    value="${oferta}" 
+                    min="0" 
+                    oninput="validateValue(this)">
+            </td>
+        </tr>`;
     });
 
     // Fila de demanda
-    html += '<tr><th>Demanda</th>';
+    html += `
+        <tr>
+            <th class="bg-light">Demanda</th>`;
+    
     diagramData.cities.forEach(city => {
         const demanda = (diagramData.demanda && diagramData.demanda[city] !== undefined) ? diagramData.demanda[city] : 0;
-        html += `<td style="background:#c8fac8;">
-            <input type="number" class="form-control form-control-sm text-center demand-input" 
-                id="demand_${city}" value="${demanda}" min="0" oninput="validateValue(this)">
+        html += `
+            <td style="background-color: #e6f3ff;">
+                <input type="number" 
+                    class="form-control form-control-sm text-center demand-input" 
+                    id="demand_${city}" 
+                    value="${demanda}" 
+                    min="0" 
+                    oninput="validateValue(this)">
             </td>`;
     });
-    html += '<td style="background:#e0e0e0;"></td></tr>';
+    
+    html += `
+            <td style="background-color: #e6f3ff;"></td>
+        </tr>
+        </tbody>
+        </table>
+        </div>`;
 
-    html += '</tbody></table></div>';
     matrixContainer.innerHTML = html;
+
+    // Agregar estilos específicos
+    const styles = document.createElement('style');
+    styles.textContent = `
+        .matrix-input {
+            width: 70px !important;
+            margin: 0 auto;
+        }
+        .form-control-sm {
+            font-size: 0.875rem;
+        }
+        .table td {
+            padding: 0.75rem;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .table td, .table th {
+            vertical-align: middle;
+        }
+        input.form-control {
+            background-color: white !important;
+        }
+    `;
+    document.head.appendChild(styles);
 
     // Listeners
     addSumValidationListeners();
     validateSums();
-
-    // Resumen del diagrama
-    const summaryHtml = `
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Resumen del Diagrama</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Buses:</strong> ${Object.keys(diagramData.buses).length}</p>
-                <p><strong>Ciudades:</strong> ${diagramData.cities.length}</p>
-                <p><strong>Última actualización:</strong> ${new Date(diagramData.timestamp).toLocaleString()}</p>
-            </div>
-        </div>
-    `;
-    document.getElementById('diagram-data').innerHTML = summaryHtml;
 }
 
 // Función que implementa el método de la esquina noroeste
@@ -257,7 +318,7 @@ function northwestCornerAlgorithm(offers, demands) {
     let i=0, j=0;
     while(i<m && j<n){
         const asignar = Math.min(offers[i], demands[j]);
-        sol[i][j] = asignar;vali
+        sol[i][j] = asignar;  // <-- Corregido aquí, eliminando 'vali'
         offers[i] -= asignar;
         demands[j] -= asignar;
         if(offers[i]===0 && i<m-1) i++;
@@ -280,41 +341,76 @@ function displayResults(solution, costs, offers, demands) {
         for (let j = 0; j < solution[0].length; j++)
             totalCost += solution[i][j] * costs[i][j];
 
-    // Construcción tabla
+    // Construcción de la tabla con mejor diseño
     let html = `
-        <h3 class="mb-3" style="color:#228B22;">Solución por Método de la Esquina Noroeste</h3>
-        <div class="table-responsive">
-        <table class="table table-bordered align-middle" style="text-align:center;min-width:540px;">
-            <thead>
-                <tr>
-                    <th></th>
-                    ${costs[0].map((_,j)=>`<th class="text-center">Ciudad ${j+1}</th>`).join('')}
-                    <th style="background:#c8fac8;">Oferta</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">Solución por Método de la Esquina Noroeste</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th class="bg-light"></th>
+                                ${costs[0].map((_,j)=>`
+                                    <th class="text-center bg-light">Ciudad ${j+1}</th>
+                                `).join('')}
+                                <th class="text-center" style="background-color: #e8f6e8;">Oferta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
     `;
+
+    // Filas de buses
     for (let i = 0; i < solution.length; i++) {
-        html += `<tr>
-            <th>Bus ${i+1}</th>`;
+        html += `
+            <tr class="text-center">
+                <th class="bg-light">Bus ${i+1}</th>`;
+        
         for (let j = 0; j < solution[0].length; j++) {
-            html += `<td style="position:relative;height:55px;width:85px;">
-                <div style="position:absolute;top:8px;left:10px;color:gray;font-size:13px;">${costs[i][j]}</div>
-                <div style="position:absolute;bottom:8px;right:10px;color:red;font-size:17px;">${solution[i][j] > 0 ? solution[i][j] : ''}</div>
-            </td>`;
+            html += `
+                <td class="position-relative" style="min-width: 100px; height: 80px;">
+                    <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div class="fw-bold" style="color: #333; font-size: 1.2em;">${costs[i][j]}</div>
+                        <div class="fw-bold text-danger" style="font-size: 1.3em; margin-top: 5px;">
+                            ${solution[i][j] > 0 ? solution[i][j] : ''}
+                        </div>
+                    </div>
+                </td>`;
         }
-        html += `<td style="background:#c8fac8;font-weight:bold;">${offers[i]}</td></tr>`;
+        
+        html += `
+            <td class="fw-bold text-center" style="background-color: #e8f6e8;">${offers[i]}</td>
+        </tr>`;
     }
-    // Demanda (última fila)
-    html += `<tr>
-        <th>Demanda</th>
-        ${demands.map(d=>`<td style="background:#c8fac8;font-weight:bold;">${d}</td>`).join('')}
-        <td style="background:#e0e0e0;"></td>
-    </tr>`;
-    html += `</tbody></table></div>
-        <div style="color:#228B22;font-weight:bold;font-size:1.2em;margin-top:15px;">Costo Total: ${totalCost}</div>
+
+    // Fila de demanda
+    html += `
+        <tr class="text-center">
+            <th class="bg-light">Demanda</th>
+            ${demands.map(d=>`
+                <td class="fw-bold" style="background-color: #e8f6e8;">${d}</td>
+            `).join('')}
+            <td style="background-color: #e8f6e8;"></td>
+        </tr>`;
+
+    html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <h4 class="text-success mb-0">
+                        Costo Total: <span class="badge bg-success" style="font-size: 1.1em;">${totalCost}</span>
+                    </h4>
+                </div>
+            </div>
+        </div>
     `;
+
     resultsDiv.innerHTML = html;
+
+    displayMathematicalModel(solution, costs, offers, demands);
 }
 
 // Exponer función para el botón en HTML
@@ -600,4 +696,249 @@ function generateTable(rows, cols) {
     
     // Añadir los listeners de validación después de crear la tabla
     addSumValidationListeners();
+}
+
+function displayMathematicalModel(solution, costs, offers, demands) {
+    // Crear la función objetivo con valores reales
+    let objectiveFunction = 'Min Z = ';
+    let terms = [];
+    let actualTerms = [];
+    let total = 0;
+
+    for (let i = 0; i < solution.length; i++) {
+        for (let j = 0; j < solution[0].length; j++) {
+            if (solution[i][j] > 0) {
+                // Término con valores reales
+                terms.push(`${costs[i][j]}(${solution[i][j]})`);
+                total += costs[i][j] * solution[i][j];
+            }
+        }
+    }
+
+    // Restricciones de oferta con valores reales
+    let supplyConstraints = [];
+    for (let i = 0; i < solution.length; i++) {
+        let constraintTerms = [];
+        for (let j = 0; j < solution[0].length; j++) {
+            if (solution[i][j] > 0) {
+                constraintTerms.push(`${solution[i][j]}`);
+            }
+        }
+        supplyConstraints.push(`${constraintTerms.join(' + ')} ≤ ${offers[i]}`);
+    }
+
+    // Restricciones de demanda con valores reales
+    let demandConstraints = [];
+    for (let j = 0; j < solution[0].length; j++) {
+        let constraintTerms = [];
+        for (let i = 0; i < solution.length; i++) {
+            if (solution[i][j] > 0) {
+                constraintTerms.push(`${solution[i][j]}`);
+            }
+        }
+        demandConstraints.push(`${constraintTerms.join(' + ')} = ${demands[j]}`);
+    }
+
+    // Construir el HTML
+    let html = `
+        <div class="card shadow-sm mb-4 mt-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Modelo Matemático</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5 class="text-success">Función Objetivo:</h5>
+                    <p class="ms-3">Min Z = ${terms.join(' + ')} = ${total}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="text-success">Restricciones de oferta:</h5>
+                    ${supplyConstraints.map(constraint => 
+                        `<p class="ms-3 mb-1">${constraint}</p>`
+                    ).join('')}
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="text-success">Restricciones de demanda:</h5>
+                    ${demandConstraints.map(constraint => 
+                        `<p class="ms-3 mb-1">${constraint}</p>`
+                    ).join('')}
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    // Agregar al div de resultados después de la tabla
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.insertAdjacentHTML('beforeend', html);
+}
+
+function createDiagramFromSolution(solution, costs) {
+    // Definir los colores al inicio de la función
+    const busColors = ['#0000FF', '#FF0000', '#FFA500'];
+    
+    const diagramContainer = document.getElementById('results');
+    
+    // Crear el contenedor principal
+    const html = `
+        <div class="card shadow-sm mb-4 mt-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Diagrama de Relación Buses-Ciudades</h4>
+            </div>
+            <div class="card-body">
+                <div id="diagram-container">
+                    <svg id="diagram-svg"></svg>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    diagramContainer.insertAdjacentHTML('beforeend', html);
+
+    const svg = document.getElementById('diagram-svg');
+    
+    // Configuración del diagrama con más espacio superior
+    const element_spacing = 300;
+    const horizontalMargin = 150;
+    const topMargin = 100;
+    const baseHeight = 50;
+    const diagramWidth = 1200;
+    const diagramHeight = (Math.max(solution.length, solution[0].length) * element_spacing) + baseHeight + topMargin;
+    
+    svg.style.minHeight = `${diagramHeight}px`;
+    svg.setAttribute('viewBox', `0 0 ${diagramWidth} ${diagramHeight}`);
+
+    // Definir marcadores de flecha para cada color
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    
+    busColors.forEach((color, i) => {
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', `arrow-${i}`);
+        marker.setAttribute('viewBox', '0 0 10 10');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '5');
+        marker.setAttribute('markerWidth', '6');
+        marker.setAttribute('markerHeight', '6');
+        marker.setAttribute('orient', 'auto');
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
+        path.setAttribute('fill', color);
+        marker.appendChild(path);
+        defs.appendChild(marker);
+    });
+    svg.appendChild(defs);
+
+    // Posicionar buses y ciudades
+    const busPositions = Array.from({length: solution.length}, (_, i) => ({
+        x: horizontalMargin,
+        y: topMargin + baseHeight/2 + i * element_spacing
+    }));
+    
+    const cityPositions = Array.from({length: solution[0].length}, (_, i) => ({
+        x: diagramWidth - horizontalMargin,
+        y: topMargin + baseHeight/2 + i * element_spacing
+    }));
+
+    // Dibujar buses
+    busPositions.forEach((pos, i) => {
+        const bus = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        bus.setAttribute('href', 'img/bus.png');
+        bus.setAttribute('x', pos.x - 35);
+        bus.setAttribute('y', pos.y - 30);
+        bus.setAttribute('width', '50');
+        bus.setAttribute('height', '50');
+        svg.appendChild(bus);
+        
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y - 40);
+        text.textContent = `Bus ${i + 1}`;
+        svg.appendChild(text);
+    });
+
+    // Dibujar ciudades
+    cityPositions.forEach((pos, i) => {
+        const city = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        city.setAttribute('href', 'img/cityscape.png');
+        city.setAttribute('x', pos.x - 30);
+        city.setAttribute('y', pos.y - 30);
+        city.setAttribute('width', '60');
+        city.setAttribute('height', '60');
+        svg.appendChild(city);
+        
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', pos.x - 50);
+        text.setAttribute('y', pos.y - 45);
+        text.textContent = `Ciudad ${i + 1}`;
+        svg.appendChild(text);
+    });
+
+    // Dibujar conexiones
+    busPositions.forEach((busPos, i) => {
+        cityPositions.forEach((cityPos, j) => {
+            if (solution[i][j] > 0) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', busPos.x + 50);
+                line.setAttribute('y1', busPos.y);
+                line.setAttribute('x2', cityPos.x);
+                line.setAttribute('y2', cityPos.y);
+                line.setAttribute('stroke', busColors[i % busColors.length]);
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', `url(#arrow-${i})`);
+                svg.appendChild(line);
+
+                // Calcular posiciones para etiquetas
+                const dx = cityPos.x - busPos.x;
+                const dy = cityPos.y - busPos.y;
+                const labelOffset = 30;
+
+                // Etiqueta x cerca del bus
+                const xLabelX = busPos.x + (dx * 0.3);
+                const xLabelY = busPos.y + (dy * 0.3) - labelOffset;
+                const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                xLabel.setAttribute('x', xLabelX);
+                xLabel.setAttribute('y', xLabelY);
+                xLabel.setAttribute('class', 'diagram-label');
+                xLabel.setAttribute('fill', busColors[i % busColors.length]);
+                xLabel.textContent = `x${i+1}${j+1}=${costs[i][j]}`;
+                svg.appendChild(xLabel);
+
+                // Etiqueta c cerca de la ciudad
+                const cLabelX = busPos.x + (dx * 0.7);
+                const cLabelY = busPos.y + (dy * 0.7) - labelOffset;
+                const cLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                cLabel.setAttribute('x', cLabelX);
+                cLabel.setAttribute('y', cLabelY);
+                cLabel.setAttribute('class', 'diagram-label');
+                cLabel.setAttribute('fill', busColors[i % busColors.length]);
+                cLabel.textContent = `c${i+1}${j+1}=${solution[i][j]}`;
+                svg.appendChild(cLabel);
+            }
+        });
+    });
+
+    // Estilos
+    const styles = document.createElement('style');
+    styles.textContent = `
+        #diagram-container {
+            position: relative;
+            min-height: ${diagramHeight}px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        #diagram-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .diagram-label {
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+            dominant-baseline: middle;
+            text-anchor: middle;
+        }
+    `;
+    document.head.appendChild(styles);
 }
