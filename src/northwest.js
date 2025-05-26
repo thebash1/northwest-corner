@@ -4,10 +4,6 @@ let diagramData = null;
 // Función que se ejecuta cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     loadAndValidateData();
-    const calcularButton = document.querySelector('button[onclick="calcularEsquinaNoroeste()"]');
-    if (calcularButton) {
-        calcularButton.onclick = calcularEsquinaNoroeste;
-    }
 });
 
 
@@ -116,7 +112,9 @@ function createSumValidationContainer() {
     
     // Insertar después de la matriz
     const matrixContainer = document.getElementById('data-matrix');
-    matrixContainer.parentNode.insertBefore(container, matrixContainer.nextSibling);
+    if (matrixContainer) {
+        matrixContainer.parentNode.insertBefore(container, matrixContainer.nextSibling);
+    }
 }
 
 // Función para actualizar la visualización de las sumas
@@ -174,7 +172,6 @@ function generateInputMatrix() {
         return;
     }
 
-    
     const matrixContainer = document.getElementById('data-matrix');
     if (!matrixContainer) {
         showError('No se encontró el contenedor de la matriz');
@@ -263,9 +260,7 @@ function generateInputMatrix() {
                        oninput="validateValue(this)">
             </td>`;
     });
-    html += '<td></td></tr>';
-
-    html += '</tbody></table></div>';
+    html += '<td></td></tr></tbody></table></div>';
     
     matrixContainer.innerHTML = html;
     
@@ -344,7 +339,6 @@ function generateInputMatrix() {
 
 // Función para calcular el método de la esquina noroeste
 function calcularEsquinaNoroeste() {
-    
     if (!validateSums()) {
         showError('Las sumas de ofertas y demandas deben ser iguales para calcular');
         return;
@@ -364,20 +358,38 @@ function calcularEsquinaNoroeste() {
     document.querySelectorAll('.demand-input').forEach(input => {
         demands.push(parseInt(input.value) || 0);
     });
-    
-    // Recolectar valores de la matriz
+
+    // Recolectar valores de los costos
     Object.keys(diagramData.buses).forEach((busKey, i) => {
         const row = [];
-        diagramData.cities.forEach((city, j) => {
-            const input = document.querySelector(`#input_${busKey}_${city}`);
-            row.push(parseInt(input.value) || 0);
+        diagramData.cities.forEach(city => {
+            const costInput = document.querySelector(`#cost_${busKey}_${city}`);
+            if (costInput) {
+                row.push(parseInt(costInput.value) || 0);
+            }
         });
-        matrix.push(row);
+        if (row.length > 0) {
+            matrix.push(row);
+        }
     });
-    
-    // Aquí va tu lógica existente del método de la esquina noroeste...
-    const result = northwestCornerMethod(matrix, offers, demands);
 
+    // Validar que no todos los valores sean cero
+    if (isAllZeros(matrix, offers, demands)) {
+        showError('No se puede generar el modelo matemático: todos los valores están en cero');
+        return;
+    }
+
+    if (matrix.length === 0 || matrix[0].length === 0) {
+        showError('No se pudieron obtener los datos de la matriz de costos');
+        return;
+    }
+
+    // Generar y mostrar el modelo matemático
+    displayMathematicalModel(matrix, offers, demands);
+
+    // Calcular la solución usando el método de la esquina noroeste
+    const result = northwestCornerMethod(matrix, offers, demands);
+    
     // Calcular el costo total
     let totalCost = 0;
     result.forEach((row, i) => {
@@ -386,7 +398,128 @@ function calcularEsquinaNoroeste() {
         });
     });
 
-    displayResults(result);
+    displayResults(result, matrix, totalCost);
+}
+
+// Función para verificar si todos los valores son cero
+function isAllZeros(matrix, offers, demands) {
+    // Verificar si todas las ofertas son cero
+    const offersAllZero = offers.every(offer => offer === 0);
+    
+    // Verificar si todas las demandas son cero
+    const demandsAllZero = demands.every(demand => demand === 0);
+    
+    // Verificar si todos los costos son cero
+    const costsAllZero = matrix.every(row => row.every(cost => cost === 0));
+
+    // Retornar true si todo está en cero
+    return offersAllZero && demandsAllZero && costsAllZero;
+}
+
+function displayMathematicalModel(costsMatrix, offers, demands) {
+    const modelDiv = document.createElement('div');
+    modelDiv.className = 'card mt-4';
+    
+    // Crear el título "Modelo Matemático" con estilo verde
+    const title = document.createElement('h3');
+    title.textContent = 'Modelo Matemático';
+    title.style.color = '#28a745'; // Color verde de Bootstrap
+    title.className = 'mb-4';
+
+    // Contenido del modelo
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'border rounded p-3 bg-light';
+
+    // 1. Función objetivo	
+    let html = `
+        <div class="mb-3">
+            <h5 class="mb-2">Función Objetivo (Minimizar costos):</h5>
+            <div class="bg-white p-2 rounded">
+                Min Z = ${generateObjectiveFunction(costsMatrix)}
+            </div>
+        </div>
+    `;
+
+    // 2. Restricciones de oferta
+    html += `
+        <div class="mb-3">
+            <h5 class="mb-2">Restricciones de oferta:</h5>
+            <div class="bg-white p-2 rounded">
+                ${generateSupplyConstraints(offers)}
+            </div>
+        </div>
+    `;
+    
+    // 3. Restricciones de demanda
+    html += `
+        <div class="mb-3">
+            <h5 class="mb-2">Restricciones de demanda:</h5>
+            <div class="bg-white p-2 rounded">
+                ${generateDemandConstraints(demands)}
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+
+    // Agregar elementos al contenedor principal
+    modelDiv.appendChild(title);
+    modelDiv.appendChild(contentDiv);
+
+    // Insertar antes de los resultados
+    const resultsDiv = document.getElementById('results');
+    if (resultsDiv) {
+        resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
+        resultsDiv.appendChild(modelDiv);
+    } else {
+        console.error('No se encontró el contenedor de resultados');
+    }
+}
+
+// Función para generar la función objetivo
+function generateObjectiveFunction(costsMatrix) {
+    const terms = [];
+    
+    Object.keys(diagramData.buses).forEach((busKey, i) => {
+        diagramData.cities.forEach((city, j) => {
+            const cost = costsMatrix[i][j];
+            const value = document.querySelector(`#passengers_${busKey}_${city}`).value || '0';
+            terms.push(`${cost}×${value}`);
+        });
+    });
+    
+    // si no hay términos, retornar 0
+    return terms.length > 0 ? terms.join(' + ') : '0';
+}
+
+// Función para generar las restricciones de oferta
+function generateSupplyConstraints(offers) {
+    let html = '';
+    
+    for (let i = 0; i < offers.length; i++) {
+        const terms = [];
+        for (let j = 0; j < diagramData.cities.length; j++) {
+            terms.push(`x${i+1}${j+1}`);
+        }
+        html += `${terms.join(' + ')} ≤ ${offers[i]}<br>`;
+    }
+    
+    return html;
+}
+
+// Función para generar las restricciones de demanda
+function generateDemandConstraints(demands) {
+    let html = '';
+    
+    for (let j = 0; j < demands.length; j++) {
+        const terms = [];
+        for (let i = 0; i < Object.keys(diagramData.buses).length; i++) {
+            terms.push(`x${i+1}${j+1}`);
+        }
+        html += `${terms.join(' + ')} = ${demands[j]}<br>`;
+    }
+    
+    return html;
 }
 
 // Función que implementa el método de la esquina noroeste
@@ -415,7 +548,11 @@ function northwestCornerMethod(matrix, offers, demands) {
 // Función para mostrar los resultados
 function displayResults(solution, costsMatrix, totalCost) {
     const resultsDiv = document.getElementById('results');
-    
+    if (!resultsDiv) {
+        console.error('No se encontró el contenedor de resultados');
+        return;
+    }
+
     let html = `
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
