@@ -194,8 +194,8 @@ function generateInputMatrix() {
         
         // Celdas para cada ciudad
         diagramData.cities.forEach(city => {
-            const route = routes.find(r => r.cityName === city);
-            const passengers = route ? route.passengers : 0;
+            const route = routes.find(r => r.ciudad === city);
+            const passengers = route ? route.x : 0;
             const cost = route ? route.c : 0;
             html += `
                 <td class="p-2">
@@ -483,7 +483,8 @@ function generateObjectiveFunction(costsMatrix) {
     Object.keys(diagramData.buses).forEach((busKey, i) => {
         diagramData.cities.forEach((city, j) => {
             const cost = costsMatrix[i][j];
-            const value = document.querySelector(`#passengers_${busKey}_${city}`).value || '0';
+            const input = document.querySelector(`#passengers_${busKey}_${city}`);
+            const value = input ? input.value : '0';
             terms.push(`${cost}×${value}`);
         });
     });
@@ -738,3 +739,64 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+function mostrarModeloMatematico() {
+    // Obtener buses y ciudades
+    const buses = Object.keys(diagramData.buses);
+    const ciudades = diagramData.cities;
+
+    // Función Objetivo
+    let fo = "Min Z = ";
+    const terms = [];
+    for (let i = 0; i < buses.length; i++) {
+        for (let j = 0; j < ciudades.length; j++) {
+            const costo = document.querySelector(`#cost_${buses[i]}_${ciudades[j]}`)?.value || 0;
+            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
+            terms.push(`${costo}×${pasajeros}`);
+        }
+    }
+    fo += terms.join(" + ");
+
+    // Restricciones de oferta (filas)
+    let restOferta = "";
+    for (let i = 0; i < buses.length; i++) {
+        const sumandos = [];
+        for (let j = 0; j < ciudades.length; j++) {
+            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
+            sumandos.push(`${pasajeros}`);
+        }
+        // Aquí podrías sumar los valores si tienes el total de oferta en un input (adáptalo si lo tienes)
+        const oferta = document.querySelector(`#offer_${buses[i]}`)?.value || 0;
+        restOferta += `${sumandos.join(' + ')} ≤ ${oferta}<br>`;
+    }
+
+    // Restricciones de demanda (columnas)
+    let restDemanda = "";
+    for (let j = 0; j < ciudades.length; j++) {
+        const sumandos = [];
+        for (let i = 0; i < buses.length; i++) {
+            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
+            sumandos.push(`${pasajeros}`);
+        }
+        // Aquí podrías sumar los valores si tienes el total de demanda en un input (adáptalo si lo tienes)
+        const demanda = document.querySelector(`#demand_${ciudades[j]}`)?.value || 0;
+        restDemanda += `${sumandos.join(' + ')} = ${demanda}<br>`;
+    }
+
+    // Ensamblar el HTML (estilizado como en la imagen)
+    const html = `
+    <div style="background:#f8f8f8;border:2px solid #28a745;padding:20px;border-radius:8px">
+        <h3 style="color:#28a745;margin-bottom:18px;">Modelo Matemático</h3>
+        <b>Función Objetivo (Minimizar costos):</b>
+        <div style="background:#fff;padding:7px 12px;margin-bottom:20px;border-radius:6px;font-family:monospace;">${fo}</div>
+        <b>Restricciones de oferta:</b>
+        <div style="background:#fff;padding:7px 12px;margin-bottom:20px;border-radius:6px;font-family:monospace;">${restOferta}</div>
+        <b>Restricciones de demanda:</b>
+        <div style="background:#fff;padding:7px 12px;border-radius:6px;font-family:monospace;">${restDemanda}</div>
+    </div>
+    `;
+
+    // Inserta el HTML en un contenedor, por ejemplo con id="modelo-matematico"
+    document.getElementById('results').innerHTML = html;
+}
