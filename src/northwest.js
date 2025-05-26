@@ -4,7 +4,13 @@ let diagramData = null;
 // Función que se ejecuta cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     loadAndValidateData();
+    const calcularButton = document.querySelector('button[onclick="calcularEsquinaNoroeste()"]');
+    if (calcularButton) {
+        calcularButton.onclick = calcularEsquinaNoroeste;
+    }
 });
+
+
 
 // Función para cargar los datos del localStorage
 function loadAndValidateData() {
@@ -371,6 +377,15 @@ function calcularEsquinaNoroeste() {
     
     // Aquí va tu lógica existente del método de la esquina noroeste...
     const result = northwestCornerMethod(matrix, offers, demands);
+
+    // Calcular el costo total
+    let totalCost = 0;
+    result.forEach((row, i) => {
+        row.forEach((value, j) => {
+            totalCost += value * matrix[i][j];
+        });
+    });
+
     displayResults(result);
 }
 
@@ -398,13 +413,13 @@ function northwestCornerMethod(matrix, offers, demands) {
 }
 
 // Función para mostrar los resultados
-function displayResults(solution) {
+function displayResults(solution, costsMatrix, totalCost) {
     const resultsDiv = document.getElementById('results');
     
     let html = `
         <div class="card mt-4">
             <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Resultados</h4>
+                <h4 class="mb-0">Resultados del Método de la Esquina Noroeste</h4>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -412,7 +427,7 @@ function displayResults(solution) {
                         <thead>
                             <tr>
                                 <th></th>
-                                ${diagramData.cities.map(city => `<th>${city}</th>`).join('')}
+                                ${diagramData.cities.map(city => `<th class="text-center">${city}</th>`).join('')}
                             </tr>
                         </thead>
                         <tbody>
@@ -422,7 +437,13 @@ function displayResults(solution) {
         html += `
             <tr>
                 <th>Bus ${busKey.replace('bus', '')}</th>
-                ${solution[i].map(value => `<td>${value}</td>`).join('')}
+                ${solution[i].map((value, j) => `
+                    <td class="text-center">
+                        <div class="font-weight-bold">Asignación: ${value}</div>
+                        <div class="text-muted">Costo: ${costsMatrix[i][j]}</div>
+                        <div class="text-info">Subtotal: ${value * costsMatrix[i][j]}</div>
+                    </td>
+                `).join('')}
             </tr>
         `;
     });
@@ -430,6 +451,13 @@ function displayResults(solution) {
     html += `
                         </tbody>
                     </table>
+                </div>
+                <div class="mt-3">
+                    <h5 class="text-primary">Costo Total de Transporte: ${totalCost}</h5>
+                    <p class="text-muted">
+                        Nota: Esta es la solución inicial usando el método de la esquina noroeste. 
+                        No necesariamente es la solución óptima del problema de transporte.
+                    </p>
                 </div>
             </div>
         </div>
