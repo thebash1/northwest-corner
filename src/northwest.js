@@ -231,296 +231,84 @@ function generateInputMatrix() {
         });
 
         // Celda de oferta
-        html += `
-            <td class="align-middle">
-                <input type="number" 
-                       class="form-control form-control-sm text-center w-75 mx-auto offer-input" 
-                       id="offer_${busKey}"
-                       value="0"
-                       min="0"
-                       onkeydown="return validateNumberInput(event)"
-                       onpaste="return validatePaste(event)"
-                       oninput="validateValue(this)">
-            </td>
-        </tr>`;
+        const offerInput = document.querySelector(`#offer_${busKey}`);
+        const offerValue = offerInput ? offerInput.value : 0;
+        // Declarar e inicializar tableHtml antes de usarlo
+        let tableHtml = "";
+        tableHtml += `
+                <td class="text-center fw-bold">${offerValue}</td>
+            </tr>
+        `;
     });
-
-    // Fila de demanda
-    html += '<tr><th>Demanda</th>';
-    diagramData.cities.forEach(city => {
-        html += `
-            <td>
-                <input type="number" 
-                       class="form-control form-control-sm text-center demand-input" 
-                       id="demand_${city}"
-                       value="0"
-                       min="0"
-                       onkeydown="return validateNumberInput(event)"
-                       onpaste="return validatePaste(event)"
-                       oninput="validateValue(this)">
-            </td>`;
-    });
-    html += '<td></td></tr></tbody></table></div>';
-    
-    matrixContainer.innerHTML = html;
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        .table td, .table th {
-            vertical-align: middle !important;
-        }
-        
-        .matrix-input, .offer-input, .demand-input {
-            max-width: 80px;
-            margin: 0 auto;
-        }
-        
-        .table td {
-            padding: 0.5rem !important;
-        }
-        
-        .d-flex.flex-column {
-            min-height: 85px;
-            justify-content: space-around;
-        }
-        
-        input[type="number"] {
-            height: 35px;
-        }
-
-        .passengers-input {
-            border-bottom: 2px solid #007bff;
-        }
-
-        .cost-input {
-            border-bottom: 2px solid #28a745;
-        }
-
-        /* Agregar tooltips para identificar los campos */
-        .input-group {
-            position: relative;
-        }
-
-        .input-group input:hover::after {
-            content: attr(title);
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 12px;
-            white-space: nowrap;
-        }
+    // Fila de demandas
+    tableHtml += `
+        <tr>
+            <th class="bg-secondary-subtle">Demandas</th>
     `;
-    document.head.appendChild(style);
-
-    addSumValidationListeners();
-    createSumValidationContainer();
-    validateSums(); // Validación inicial
-
-    // Añadir resumen de datos
-    const summaryHtml = `
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Resumen del Diagrama</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Buses:</strong> ${Object.keys(diagramData.buses).length}</p>
-                <p><strong>Ciudades:</strong> ${diagramData.cities.length}</p>
-                <p><strong>Última actualización:</strong> ${new Date(diagramData.timestamp).toLocaleString()}</p>
-            </div>
-        </div>
+    diagramData.cities.forEach((city, j) => {
+        const demandInput = document.querySelector(`#demand_${city}`);
+        const demandValue = demandInput ? demandInput.value : 0;
+        tableHtml += `
+            <td class="text-center fw-bold">${demandValue}</td>
+        `;
+    });
+    // Celda de total
+    const totalOferta = calculateTotalOffer();
+    tableHtml += `
+            <td class="text-center fw-bold">${totalOferta}</td>
+        </tr>
     `;
-    document.getElementById('diagram-data').innerHTML = summaryHtml;
-}
-
-// Función para calcular el método de la esquina noroeste
-function calcularEsquinaNoroeste() {
-    if (!validateSums()) {
-        showError('Las sumas de ofertas y demandas deben ser iguales para calcular');
-        return;
-    }
-
-    // Obtener valores de la matriz
-    const matrix = [];
-    const offers = [];
-    const demands = [];
-    
-    // Recolectar ofertas
-    document.querySelectorAll('.offer-input').forEach(input => {
-        offers.push(parseInt(input.value) || 0);
-    });
-    
-    // Recolectar demandas
-    document.querySelectorAll('.demand-input').forEach(input => {
-        demands.push(parseInt(input.value) || 0);
-    });
-
-    // Recolectar valores de los costos
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+    tableDiv.innerHTML = tableHtml;
+    // Crear el div para el costo total
+    const costDiv = document.createElement('div');
+    costDiv.className = 'text-center mt-3';
+    costDiv.innerHTML = `<h4 class="fw-bold">Costo Total: <span style="color: #388e3c;">${totalCost}</span></h4>`;
+    // Agregar todo al contenedor de resultados
+    resultCard.appendChild(title);
+    resultCard.appendChild(tableDiv);
+    resultCard.appendChild(costDiv);
+    // Mostrar restricciones y validación después de la tabla
+    const constraintsDiv = document.createElement('div');
+    constraintsDiv.className = 'mt-4';
+    // Generar restricciones con los valores de la solución
+    const supplyConstraints = generateSupplyConstraints(solution.map(row => row.reduce((a,b)=>a+b,0)));
+    const demandConstraints = generateDemandConstraints(solution[0].map((_,j)=>solution.reduce((a,row)=>a+row[j],0)));
+    // Validar restricciones
+    let supplyValid = true;
+    let demandValid = true;
     Object.keys(diagramData.buses).forEach((busKey, i) => {
-        const row = [];
-        diagramData.cities.forEach(city => {
-            const costInput = document.querySelector(`#cost_${busKey}_${city}`);
-            if (costInput) {
-                row.push(parseInt(costInput.value) || 0);
-            }
-        });
-        if (row.length > 0) {
-            matrix.push(row);
-        }
+        const offerInput = document.querySelector(`#offer_${busKey}`);
+        const offerValue = offerInput ? parseInt(offerInput.value) : 0;
+        const sum = solution[i].reduce((a,b)=>a+b,0);
+        if(sum > offerValue) supplyValid = false;
     });
-
-    // Validar que no todos los valores sean cero
-    if (isAllZeros(matrix, offers, demands)) {
-        showError('No se puede generar el modelo matemático: todos los valores están en cero');
-        return;
-    }
-
-    if (matrix.length === 0 || matrix[0].length === 0) {
-        showError('No se pudieron obtener los datos de la matriz de costos');
-        return;
-    }
-
-    // Generar y mostrar el modelo matemático
-    displayMathematicalModel(matrix, offers, demands);
-
-    // Calcular la solución usando el método de la esquina noroeste
-    const result = northwestCornerMethod(matrix, offers, demands);
-    
-    // Calcular el costo total
-    let totalCost = 0;
-    result.forEach((row, i) => {
-        row.forEach((value, j) => {
-            totalCost += value * matrix[i][j];
-        });
+    diagramData.cities.forEach((city, j) => {
+        const demandInput = document.querySelector(`#demand_${city}`);
+        const demandValue = demandInput ? parseInt(demandInput.value) : 0;
+        const sum = solution.map(row=>row[j]).reduce((a,b)=>a+b,0);
+        if(sum !== demandValue) demandValid = false;
     });
-
-    displayResults(result, matrix, totalCost);
-}
-
-// Función para verificar si todos los valores son cero
-function isAllZeros(matrix, offers, demands) {
-    // Verificar si todas las ofertas son cero
-    const offersAllZero = offers.every(offer => offer === 0);
-    
-    // Verificar si todas las demandas son cero
-    const demandsAllZero = demands.every(demand => demand === 0);
-    
-    // Verificar si todos los costos son cero
-    const costsAllZero = matrix.every(row => row.every(cost => cost === 0));
-
-    // Retornar true si todo está en cero
-    return offersAllZero && demandsAllZero && costsAllZero;
-}
-
-function displayMathematicalModel(costsMatrix, offers, demands) {
-    const modelDiv = document.createElement('div');
-    modelDiv.className = 'card mt-4';
-    
-    // Crear el título "Modelo Matemático" con estilo verde
-    const title = document.createElement('h3');
-    title.textContent = 'Modelo Matemático';
-    title.style.color = '#28a745'; // Color verde de Bootstrap
-    title.className = 'mb-4';
-
-    // Contenido del modelo
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'border rounded p-3 bg-light';
-
-    // 1. Función objetivo	
-    let html = `
-        <div class="mb-3">
-            <h5 class="mb-2">Función Objetivo (Minimizar costos):</h5>
-            <div class="bg-white p-2 rounded">
-                Min Z = ${generateObjectiveFunction(costsMatrix)}
+    constraintsDiv.innerHTML = `
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white rounded-top"><h4 class="mb-0 fw-bold">Restricciones del Modelo</h4></div>
+            <div class="card-body bg-light">
+                <div class="mb-3">
+                    <h5 class="fw-bold">Restricciones de Oferta:</h5>
+                    ${supplyConstraints.map((constraint, i) => `<p class="mb-1">${constraint} <span class='badge bg-${supplyValid ? "success" : "danger"}'>${supplyValid ? "Cumple" : "No cumple"}</span></p>`).join('')}
+                </div>
+                <div class="mb-3">
+                    <h5 class="fw-bold">Restricciones de Demanda:</h5>
+                    ${demandConstraints.map((constraint, i) => `<p class="mb-1">${constraint} <span class='badge bg-${demandValid ? "success" : "danger"}'>${demandValid ? "Cumple" : "No cumple"}</span></p>`).join('')}
+                </div>
             </div>
         </div>
     `;
-
-    // 2. Restricciones de oferta
-    html += `
-        <div class="mb-3">
-            <h5 class="mb-2">Restricciones de oferta:</h5>
-            <div class="bg-white p-2 rounded">
-                ${generateSupplyConstraints(offers)}
-            </div>
-        </div>
-    `;
-    
-    // 3. Restricciones de demanda
-    html += `
-        <div class="mb-3">
-            <h5 class="mb-2">Restricciones de demanda:</h5>
-            <div class="bg-white p-2 rounded">
-                ${generateDemandConstraints(demands)}
-            </div>
-        </div>
-    `;
-    
-    contentDiv.innerHTML = html;
-
-    // Agregar elementos al contenedor principal
-    modelDiv.appendChild(title);
-    modelDiv.appendChild(contentDiv);
-
-    // Insertar antes de los resultados
-    const resultsDiv = document.getElementById('results');
-    if (resultsDiv) {
-        resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
-        resultsDiv.appendChild(modelDiv);
-    } else {
-        console.error('No se encontró el contenedor de resultados');
-    }
-}
-
-// Función para generar la función objetivo
-function generateObjectiveFunction(costsMatrix) {
-    const terms = [];
-    
-    Object.keys(diagramData.buses).forEach((busKey, i) => {
-        diagramData.cities.forEach((city, j) => {
-            const cost = costsMatrix[i][j];
-            const input = document.querySelector(`#passengers_${busKey}_${city}`);
-            const value = input ? input.value : '0';
-            terms.push(`${cost}×${value}`);
-        });
-    });
-    
-    // si no hay términos, retornar 0
-    return terms.length > 0 ? terms.join(' + ') : '0';
-}
-
-// Función para generar las restricciones de oferta
-function generateSupplyConstraints(offers) {
-    let html = '';
-    
-    for (let i = 0; i < offers.length; i++) {
-        const terms = [];
-        for (let j = 0; j < diagramData.cities.length; j++) {
-            terms.push(`x${i+1}${j+1}`);
-        }
-        html += `${terms.join(' + ')} ≤ ${offers[i]}<br>`;
-    }
-    
-    return html;
-}
-
-// Función para generar las restricciones de demanda
-function generateDemandConstraints(demands) {
-    let html = '';
-    
-    for (let j = 0; j < demands.length; j++) {
-        const terms = [];
-        for (let i = 0; i < Object.keys(diagramData.buses).length; i++) {
-            terms.push(`x${i+1}${j+1}`);
-        }
-        html += `${terms.join(' + ')} = ${demands[j]}<br>`;
-    }
-    
-    return html;
+    resultCard.appendChild(constraintsDiv);
+    resultsDiv.appendChild(resultCard);
 }
 
 // Función que implementa el método de la esquina noroeste
@@ -530,20 +318,39 @@ function northwestCornerMethod(matrix, offers, demands) {
     const remainingDemands = [...demands];
     const solution = Array(matrix.length).fill().map(() => Array(matrix[0].length).fill(0));
     
+    // Crear un array para almacenar los pasos del algoritmo para mostrarlos después
+    const steps = [];
+    
     let i = 0, j = 0;
     
+    // Mientras haya filas y columnas por procesar
     while (i < matrix.length && j < matrix[0].length) {
+        // Calcular la cantidad a asignar (el mínimo entre oferta y demanda disponible)
         const amount = Math.min(remainingOffers[i], remainingDemands[j]);
+        
+        // Asignar la cantidad a la celda actual
         solution[i][j] = amount;
         
+        // Guardar el paso actual para mostrar el proceso
+        steps.push({
+            row: i,
+            col: j,
+            amount: amount,
+            remainingOffers: [...remainingOffers],
+            remainingDemands: [...remainingDemands]
+        });
+        
+        // Actualizar las ofertas y demandas restantes
         remainingOffers[i] -= amount;
         remainingDemands[j] -= amount;
         
+        // Si la oferta se agotó, pasar a la siguiente fila
         if (remainingOffers[i] === 0) i++;
+        // Si la demanda se satisfizo, pasar a la siguiente columna
         if (remainingDemands[j] === 0) j++;
     }
     
-    return solution;
+    return { solution, steps };
 }
 
 // Función para mostrar los resultados
@@ -554,54 +361,49 @@ function displayResults(solution, costsMatrix, totalCost) {
         return;
     }
 
-    let html = `
-        <div class="card mt-4">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Resultados del Método de la Esquina Noroeste</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+    const resultCard = document.createElement('div');
+    resultCard.className = 'card mt-4';
+    
+    resultCard.innerHTML = `
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Resultados del Método de la Esquina Noroeste</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            ${diagramData.cities.map(city => `<th class="text-center">${city}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.keys(diagramData.buses).map((busKey, i) => `
                             <tr>
-                                <th></th>
-                                ${diagramData.cities.map(city => `<th class="text-center">${city}</th>`).join('')}
+                                <th>Bus ${busKey.replace('bus', '')}</th>
+                                ${solution[i].map((value, j) => `
+                                    <td class="text-center">
+                                        <div class="font-weight-bold">Asignación: ${value}</div>
+                                        <div class="text-muted">Costo: ${costsMatrix[i][j]}</div>
+                                        <div class="text-info">Subtotal: ${value * costsMatrix[i][j]}</div>
+                                    </td>
+                                `).join('')}
                             </tr>
-                        </thead>
-                        <tbody>
-    `;
-    
-    Object.keys(diagramData.buses).forEach((busKey, i) => {
-        html += `
-            <tr>
-                <th>Bus ${busKey.replace('bus', '')}</th>
-                ${solution[i].map((value, j) => `
-                    <td class="text-center">
-                        <div class="font-weight-bold">Asignación: ${value}</div>
-                        <div class="text-muted">Costo: ${costsMatrix[i][j]}</div>
-                        <div class="text-info">Subtotal: ${value * costsMatrix[i][j]}</div>
-                    </td>
-                `).join('')}
-            </tr>
-        `;
-    });
-    
-    html += `
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-3">
-                    <h5 class="text-primary">Costo Total de Transporte: ${totalCost}</h5>
-                    <p class="text-muted">
-                        Nota: Esta es la solución inicial usando el método de la esquina noroeste. 
-                        No necesariamente es la solución óptima del problema de transporte.
-                    </p>
-                </div>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <h5 class="text-primary">Costo Total de Transporte: ${totalCost}</h5>
+                <p class="text-muted">
+                    Nota: Esta es la solución inicial usando el método de la esquina noroeste. 
+                    No necesariamente es la solución óptima del problema de transporte.
+                </p>
             </div>
         </div>
     `;
     
-    resultsDiv.innerHTML = html;
+    resultsDiv.appendChild(resultCard);
 }
 
 // Función para validar entrada de teclado
@@ -712,6 +514,77 @@ validationStyles.textContent = `
 `;
 document.head.appendChild(validationStyles);
 
+// Función para generar la función objetivo
+function generateObjectiveFunction(matrix) {
+    let objective = 'Min Z = ';
+    let terms = [];
+    
+    Object.keys(diagramData.buses).forEach((busKey, i) => {
+        diagramData.cities.forEach((city, j) => {
+            const cost = matrix[i][j];
+            if (cost > 0) {
+                terms.push(`${cost} X<sub>${i+1}${j+1}</sub>`);
+            }
+        });
+    });
+    
+    objective += terms.join(' + ');
+    return objective;
+}
+
+// Función para generar las restricciones de oferta
+function generateSupplyConstraints(offers) {
+    const constraints = [];
+    
+    Object.keys(diagramData.buses).forEach((busKey, i) => {
+        let constraint = '';
+        const terms = [];
+        
+        diagramData.cities.forEach((city, j) => {
+            terms.push(`X<sub>${i+1}${j+1}</sub>`);
+        });
+        
+        constraint = terms.join(' + ') + ` ≤ ${offers[i]}`;
+        constraints.push(constraint);
+    });
+    
+    return constraints;
+}
+
+// Función para generar las restricciones de demanda
+function generateDemandConstraints(demands) {
+    const constraints = [];
+    
+    diagramData.cities.forEach((city, j) => {
+        let constraint = '';
+        const terms = [];
+        
+        Object.keys(diagramData.buses).forEach((busKey, i) => {
+            terms.push(`X<sub>${i+1}${j+1}</sub>`);
+        });
+        
+        constraint = terms.join(' + ') + ` = ${demands[j]}`;
+        constraints.push(constraint);
+    });
+    
+    return constraints;
+}
+
+// Función para generar las restricciones de no negatividad
+function generateNonNegativityConstraints(matrix) {
+    let constraint = '';
+    const terms = [];
+    
+    Object.keys(diagramData.buses).forEach((busKey, i) => {
+        diagramData.cities.forEach((city, j) => {
+            terms.push(`X<sub>${i+1}${j+1}</sub> ≥ 0`);
+        });
+    });
+    
+    constraint = terms.join(', ');
+    return constraint;
+}
+
 // Agregar estilos para inputs inválidos
 const style = document.createElement('style');
 style.textContent = `
@@ -739,64 +612,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-
-function mostrarModeloMatematico() {
-    // Obtener buses y ciudades
-    const buses = Object.keys(diagramData.buses);
-    const ciudades = diagramData.cities;
-
-    // Función Objetivo
-    let fo = "Min Z = ";
-    const terms = [];
-    for (let i = 0; i < buses.length; i++) {
-        for (let j = 0; j < ciudades.length; j++) {
-            const costo = document.querySelector(`#cost_${buses[i]}_${ciudades[j]}`)?.value || 0;
-            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
-            terms.push(`${costo}×${pasajeros}`);
-        }
-    }
-    fo += terms.join(" + ");
-
-    // Restricciones de oferta (filas)
-    let restOferta = "";
-    for (let i = 0; i < buses.length; i++) {
-        const sumandos = [];
-        for (let j = 0; j < ciudades.length; j++) {
-            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
-            sumandos.push(`${pasajeros}`);
-        }
-        // Aquí podrías sumar los valores si tienes el total de oferta en un input (adáptalo si lo tienes)
-        const oferta = document.querySelector(`#offer_${buses[i]}`)?.value || 0;
-        restOferta += `${sumandos.join(' + ')} ≤ ${oferta}<br>`;
-    }
-
-    // Restricciones de demanda (columnas)
-    let restDemanda = "";
-    for (let j = 0; j < ciudades.length; j++) {
-        const sumandos = [];
-        for (let i = 0; i < buses.length; i++) {
-            const pasajeros = document.querySelector(`#passengers_${buses[i]}_${ciudades[j]}`)?.value || 0;
-            sumandos.push(`${pasajeros}`);
-        }
-        // Aquí podrías sumar los valores si tienes el total de demanda en un input (adáptalo si lo tienes)
-        const demanda = document.querySelector(`#demand_${ciudades[j]}`)?.value || 0;
-        restDemanda += `${sumandos.join(' + ')} = ${demanda}<br>`;
-    }
-
-    // Ensamblar el HTML (estilizado como en la imagen)
-    const html = `
-    <div style="background:#f8f8f8;border:2px solid #28a745;padding:20px;border-radius:8px">
-        <h3 style="color:#28a745;margin-bottom:18px;">Modelo Matemático</h3>
-        <b>Función Objetivo (Minimizar costos):</b>
-        <div style="background:#fff;padding:7px 12px;margin-bottom:20px;border-radius:6px;font-family:monospace;">${fo}</div>
-        <b>Restricciones de oferta:</b>
-        <div style="background:#fff;padding:7px 12px;margin-bottom:20px;border-radius:6px;font-family:monospace;">${restOferta}</div>
-        <b>Restricciones de demanda:</b>
-        <div style="background:#fff;padding:7px 12px;border-radius:6px;font-family:monospace;">${restDemanda}</div>
-    </div>
-    `;
-
-    // Inserta el HTML en un contenedor, por ejemplo con id="modelo-matematico"
-    document.getElementById('results').innerHTML = html;
-}
