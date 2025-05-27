@@ -222,7 +222,8 @@ function generateInputMatrix() {
                             min="0" 
                             data-bus="${busKey}" 
                             data-city="${city}" 
-                            oninput="validateValue(this)">
+                            oninput="validateValue(this)"
+                            style="display: none;">
                         <input type="number" 
                             class="form-control form-control-sm text-center cost-input matrix-input" 
                             id="cost_${busKey}_${city}" 
@@ -304,10 +305,11 @@ function generateInputMatrix() {
         }
     `;
     document.head.appendChild(styles);
-
+    
     // Listeners
     addSumValidationListeners();
     validateSums();
+
 }
 
 // Función que implementa el método de la esquina noroeste
